@@ -1,11 +1,16 @@
+import kisanDhanImage from "@assets/image_1750507862301_1750945011839.png";
+import moneyMateImage from "@assets/linkdin_1750507830154_1750945011840.png";
+import phishGuardImage from "@assets/phish_1750507830155_1750945011841.png";
+import taxMateImage from "@assets/taxmate_1750507830156_1750945011842.png";
+
 export default function Projects() {
   const projects = [
     {
       id: 1,
       title: 'KISANDHAN – AI Crop Advisor',
       description: 'Smart agriculture application using Gemini API for intelligent crop suggestions and farming guidance.',
-      image: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400',
-      alt: 'Modern agricultural field with smart farming technology',
+      image: kisanDhanImage,
+      alt: 'KisanDhan - Smart Agriculture Platform',
       technologies: [
         { name: 'AI', color: 'blue' },
         { name: 'Gemini API', color: 'green' },
@@ -19,8 +24,8 @@ export default function Projects() {
       id: 2,
       title: 'PhishGuard – Anti-Phishing',
       description: 'Real-time malicious link detection system built with React for enhanced web security.',
-      image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400',
-      alt: 'Digital security and cybersecurity concept with lock icons',
+      image: phishGuardImage,
+      alt: 'PhishGuard - Protecting from Digital Threats',
       technologies: [
         { name: 'React', color: 'cyan' },
         { name: 'Security', color: 'red' },
@@ -34,8 +39,8 @@ export default function Projects() {
       id: 3,
       title: 'Tax Mate – Income Tax Chatbot',
       description: 'Intelligent chatbot interface for recommending appropriate ITR forms and tax filing guidance.',
-      image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400',
-      alt: 'Financial documents, calculator and tax forms on desk',
+      image: taxMateImage,
+      alt: 'Tax Mate - Your Smart Tax Filing Assistant',
       technologies: [
         { name: 'React', color: 'cyan' },
         { name: 'Chatbot', color: 'purple' },
@@ -49,8 +54,8 @@ export default function Projects() {
       id: 4,
       title: 'MoneyMate – Expense Tracker',
       description: 'Comprehensive personal finance management tool built with Python and Tkinter for expense tracking.',
-      image: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400',
-      alt: 'Financial charts, graphs, and personal finance planning tools',
+      image: moneyMateImage,
+      alt: 'MoneyMate - Unlock Financial Freedom: Budgeting Made Simple',
       technologies: [
         { name: 'Python', color: 'yellow' },
         { name: 'Tkinter', color: 'blue' },

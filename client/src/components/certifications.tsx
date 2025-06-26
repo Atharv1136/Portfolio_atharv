@@ -10,7 +10,8 @@ export default function Certifications() {
       gradientFrom: 'from-blue-500',
       gradientTo: 'to-purple-600',
       buttonColor: 'bg-blue-500 hover:bg-blue-600',
-      titleColor: 'text-blue-400'
+      titleColor: 'text-blue-400',
+      credentialUrl: 'https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/skoQmxqhtgWmKv2pm/p3xGFkpdot5H8NBih_skoQmxqhtgWmKv2pm_QLCuExjPqmfhcSzpp_1738060306337_completion_certificate.pdf'
     },
     {
       id: 2,
@@ -22,7 +23,8 @@ export default function Certifications() {
       gradientFrom: 'from-yellow-500',
       gradientTo: 'to-orange-600',
       buttonColor: 'bg-yellow-500 hover:bg-yellow-600',
-      titleColor: 'text-yellow-400'
+      titleColor: 'text-yellow-400',
+      credentialUrl: 'https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/Goldman%20Sachs/NPdeQ43o8P9HJmJzg_Goldman%20Sachs_QLCuExjPqmfhcSzpp_1729656516724_completion_certificate.pdf'
     },
     {
       id: 3,
@@ -34,7 +36,8 @@ export default function Certifications() {
       gradientFrom: 'from-red-500',
       gradientTo: 'to-pink-600',
       buttonColor: 'bg-red-500 hover:bg-red-600',
-      titleColor: 'text-red-400'
+      titleColor: 'text-red-400',
+      credentialUrl: 'https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/mastercard/vcKAB5yYAgvemepGQ_mfxGwGDp6WkQmtmTf_QLCuExjPqmfhcSzpp_1729915082752_completion_certificate.pdf'
     }
   ];
 
@@ -65,9 +68,14 @@ export default function Certifications() {
                     <p><strong>Issued:</strong> {cert.issued}</p>
                     <p><strong>Platform:</strong> {cert.platform}</p>
                   </div>
-                  <button className={`block w-full ${cert.buttonColor} text-white py-2 px-4 rounded-lg font-medium transition-colors duration-300 text-center`}>
+                  <a 
+                    href={cert.credentialUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className={`block w-full ${cert.buttonColor} text-white py-2 px-4 rounded-lg font-medium transition-colors duration-300 text-center`}
+                  >
                     <i className="fas fa-certificate mr-2"></i>Show Credential
-                  </button>
+                  </a>
                 </div>
               </div>
             ))}
