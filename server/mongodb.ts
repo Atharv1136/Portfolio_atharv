@@ -12,17 +12,18 @@ if (!uri) {
   throw new Error('MONGODB_URI environment variable is required');
 }
 
-let cachedConnection: typeof mongoose.Connection | null = null;
+let cachedConnection: mongoose.Connection | null = null;
 
-export async function connectToDatabase() {
+export async function connectToDatabase(): Promise<mongoose.Connection> {
   // If already connected, return existing connection
   if (mongoose.connection.readyState === 1) {
     console.log("✅ MongoDB already connected");
+    cachedConnection = mongoose.connection;
     return mongoose.connection;
   }
 
   if (cachedConnection) {
-    return mongoose.connection;
+    return cachedConnection;
   }
 
   try {
@@ -62,7 +63,8 @@ export async function connectToDatabase() {
       console.log("✅ MongoDB reconnected");
     });
 
-    return mongoose.connection as mongoose.Connection;
+    cachedConnection = mongoose.connection;
+    return mongoose.connection;
   } catch (error: any) {
     console.error("❌ MongoDB Connection Error:");
     console.error("   Error:", error.message);
