@@ -1,52 +1,79 @@
+import { useQuery } from '@tanstack/react-query';
+import { getQueryFn } from '@/lib/queryClient';
 import skysCertImage from "@assets/sky_1750507766705_1750945011842.png";
 import goldmanCertImage from "@assets/gmc_1750507766704_1750945011837.png";
 import mastercardCertImage from "@assets/cyb_1750507766703_1750945011835.png";
+import accentureCertImage from "@assets/acc_1750507766702_1750945011833.png";
+
+// Fallback certifications
+const fallbackCertifications = [
+  {
+    id: 1,
+    company: 'Skyscanner',
+    title: 'Software Engineering Job Simulation',
+    issued: 'January 2025',
+    platform: 'Forage',
+    icon: 'fas fa-plane',
+    cardColor: 'bg-blue-500',
+    buttonColor: 'bg-white hover:bg-gray-100 text-blue-500',
+    titleColor: 'text-white',
+    textColor: 'text-blue-100',
+    certImageUrl: skysCertImage,
+    credentialUrl: 'https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/skoQmxqhtgWmKv2pm/p3xGFkpdot5H8NBih_skoQmxqhtgWmKv2pm_QLCuExjPqmfhcSzpp_1738060306337_completion_certificate.pdf'
+  },
+  {
+    id: 2,
+    company: 'Goldman Sachs',
+    title: 'Software Engineering Job Simulation',
+    issued: 'October 2024',
+    platform: 'Forage',
+    icon: 'fas fa-chart-line',
+    cardColor: 'bg-blue-600',
+    buttonColor: 'bg-white hover:bg-gray-100 text-blue-600',
+    titleColor: 'text-white',
+    textColor: 'text-blue-100',
+    certImageUrl: goldmanCertImage,
+    credentialUrl: 'https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/Goldman%20Sachs/NPdeQ43o8P9HJmJzg_Goldman%20Sachs_QLCuExjPqmfhcSzpp_1729656516724_completion_certificate.pdf'
+  },
+  {
+    id: 3,
+    company: 'Mastercard',
+    title: 'Cybersecurity Job Simulation',
+    issued: 'October 2024',
+    platform: 'Forage',
+    icon: 'fas fa-shield-alt',
+    cardColor: 'bg-red-500',
+    buttonColor: 'bg-white hover:bg-gray-100 text-green-500',
+    titleColor: 'text-white',
+    textColor: 'text-green-100',
+    certImageUrl: mastercardCertImage,
+    credentialUrl: 'https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/mastercard/vcKAB5yYAgvemepGQ_mfxGwGDp6WkQmtmTf_QLCuExjPqmfhcSzpp_1729915082752_completion_certificate.pdf'
+  },
+  {
+    id: 4,
+    company: 'Accenture',
+    title: 'Software Engineering Job Simulation',
+    issued: 'June 2025',
+    platform: 'Forage',
+    icon: 'fas fa-shield-alt',
+    cardColor: 'bg-purple-500',
+    buttonColor: 'bg-white hover:bg-gray-100 text-red-500',
+    titleColor: 'text-white',
+    textColor: 'text-purple-100',
+    certImageUrl: accentureCertImage,
+    credentialUrl: 'https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/xhih9yFWsf6AYfngd/HNpZwZcuYwona2d8Y_xhih9yFWsf6AYfngd_QLCuExjPqmfhcSzpp_1751295764925_completion_certificate.pdf'
+  }
+];
 
 export default function Certifications() {
-  const certifications = [
-    {
-      id: 1,
-      company: 'Skyscanner',
-      title: 'Software Engineering Job Simulation',
-      issued: 'January 2025',
-      platform: 'Forage',
-      icon: 'fas fa-plane',
-      cardColor: 'bg-blue-500',
-      buttonColor: 'bg-white hover:bg-gray-100 text-blue-500',
-      titleColor: 'text-white',
-      textColor: 'text-blue-100',
-      certImage: skysCertImage,
-      credentialUrl: 'https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/skoQmxqhtgWmKv2pm/p3xGFkpdot5H8NBih_skoQmxqhtgWmKv2pm_QLCuExjPqmfhcSzpp_1738060306337_completion_certificate.pdf'
-    },
-    {
-      id: 2,
-      company: 'Goldman Sachs',
-      title: 'Software Engineering Job Simulation',
-      issued: 'October 2024',
-      platform: 'Forage',
-      icon: 'fas fa-chart-line',
-      cardColor: 'bg-blue-600',
-      buttonColor: 'bg-white hover:bg-gray-100 text-blue-600',
-      titleColor: 'text-white',
-      textColor: 'text-blue-100',
-      certImage: goldmanCertImage,
-      credentialUrl: 'https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/Goldman%20Sachs/NPdeQ43o8P9HJmJzg_Goldman%20Sachs_QLCuExjPqmfhcSzpp_1729656516724_completion_certificate.pdf'
-    },
-    {
-      id: 3,
-      company: 'Mastercard',
-      title: 'Cybersecurity Job Simulation',
-      issued: 'October 2024',
-      platform: 'Forage',
-      icon: 'fas fa-shield-alt',
-      cardColor: 'bg-red-500',
-      buttonColor: 'bg-white hover:bg-gray-100 text-red-500',
-      titleColor: 'text-white',
-      textColor: 'text-red-100',
-      certImage: mastercardCertImage,
-      credentialUrl: 'https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/mastercard/vcKAB5yYAgvemepGQ_mfxGwGDp6WkQmtmTf_QLCuExjPqmfhcSzpp_1729915082752_completion_certificate.pdf'
-    }
-  ];
+  const { data: certificationsData } = useQuery<any[]>({
+    queryKey: ['/api/certifications'],
+    queryFn: getQueryFn({ on401: 'returnNull' }),
+  });
+
+  const certifications = certificationsData && certificationsData.length > 0 
+    ? certificationsData 
+    : fallbackCertifications;
 
   return (
     <section id="certifications" className="py-20 lg:py-32">
@@ -66,7 +93,9 @@ export default function Certifications() {
                 {/* Certificate Image */}
                 <div className="bg-white rounded-xl p-4 mb-6 shadow-lg">
                   <img 
-                    src={cert.certImage} 
+                    src={cert.certImageUrl?.startsWith('/uploads/') || cert.certImageUrl?.startsWith('http') 
+                      ? cert.certImageUrl 
+                      : cert.certImageUrl || cert.certImage} 
                     alt={`${cert.company} Certificate`}
                     className="w-full h-auto rounded-lg"
                   />
@@ -81,15 +110,17 @@ export default function Certifications() {
                   </div>
                   
                   {/* Show Credential Button */}
-                  <a 
-                    href={cert.credentialUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className={`inline-flex items-center gap-2 ${cert.buttonColor} py-2 px-6 rounded-lg font-medium transition-colors duration-300`}
-                  >
-                    <i className="fas fa-external-link-alt"></i>
-                    Show Credential
-                  </a>
+                  {cert.credentialUrl && (
+                    <a 
+                      href={cert.credentialUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className={`inline-flex items-center gap-2 ${cert.buttonColor} py-2 px-6 rounded-lg font-medium transition-colors duration-300`}
+                    >
+                      <i className="fas fa-external-link-alt"></i>
+                      Show Credential
+                    </a>
+                  )}
                 </div>
               </div>
             ))}

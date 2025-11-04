@@ -1,6 +1,24 @@
+import { useQuery } from '@tanstack/react-query';
+import { getQueryFn } from '@/lib/queryClient';
+
+// Fallback data
+const defaultAbout = {
+  bio: 'BE Computer Science student passionate about solving real-world problems through innovation and teamwork. I\'ve participated in multiple national hackathons and developed impactful solutions, including AI-powered crop advisory platforms and cybersecurity detection tools.',
+  education: 'BE CSE, SPPU (Expected 2027)',
+  languages: 'English, Hindi, Marathi',
+  skills: ['Python', 'C', 'C++', 'React', 'Node.js', 'SQL', 'n8n'],
+  tools: ['GitHub', 'VS Code', 'Power BI', 'Jupyter'],
+};
+
 export default function About() {
-  const skills = ['Python', 'C', 'C++', 'React', 'Node.js', 'SQL'];
-  const tools = ['GitHub', 'VS Code', 'Power BI', 'Jupyter'];
+  const { data: aboutData } = useQuery<any>({
+    queryKey: ['/api/about'],
+    queryFn: getQueryFn({ on401: 'returnNull' }),
+  });
+
+  const about = aboutData || defaultAbout;
+  const skills = Array.isArray(about.skills) ? about.skills : defaultAbout.skills;
+  const tools = Array.isArray(about.tools) ? about.tools : defaultAbout.tools;
 
   return (
     <section id="about" className="py-20 lg:py-32 relative">
@@ -14,8 +32,7 @@ export default function About() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
               <p className="text-lg text-gray-300 leading-relaxed mb-8">
-                BE Computer Science student committed to building smart and scalable solutions. 
-                Blending tech knowledge and teamwork, I've created tools from AI crop advisors to phishing detectors.
+                {about.bio}
               </p>
               
               <div className="space-y-6">
@@ -24,7 +41,7 @@ export default function About() {
                     <i className="fas fa-graduation-cap text-white text-sm"></i>
                   </div>
                   <span className="text-lg">
-                    <strong className="text-white">Education:</strong> BE CSE, SPPU (Expected 2027)
+                    <strong className="text-white">Education:</strong> {about.education}
                   </span>
                 </div>
                 
@@ -33,7 +50,7 @@ export default function About() {
                     <i className="fas fa-globe text-white text-sm"></i>
                   </div>
                   <span className="text-lg">
-                    <strong className="text-white">Languages:</strong> English, Hindi, Marathi
+                    <strong className="text-white">Languages:</strong> {about.languages}
                   </span>
                 </div>
               </div>
@@ -46,7 +63,7 @@ export default function About() {
                   <i className="fas fa-code mr-2"></i>Technical Skills
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {skills.map((skill) => (
+                  {skills.map((skill: string) => (
                     <span 
                       key={skill}
                       className="tech-tag bg-gray-800 text-gray-300 px-4 py-2 rounded-full text-sm font-medium hover:bg-blue-500 hover:text-white"
@@ -63,7 +80,7 @@ export default function About() {
                   <i className="fas fa-tools mr-2"></i>Tools & Platforms
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {tools.map((tool) => (
+                  {tools.map((tool: string) => (
                     <span 
                       key={tool}
                       className="tech-tag bg-gray-800 text-gray-300 px-4 py-2 rounded-full text-sm font-medium hover:bg-purple-500 hover:text-white"

@@ -34,4 +34,6 @@ export default defineConfig({
       deny: ["**/.*"],
     },
   },
+  // Expose environment variables to client (if needed in future)
+  envPrefix: ['VITE_'],
 });

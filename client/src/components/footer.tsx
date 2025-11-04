@@ -25,7 +25,7 @@ export default function Footer() {
               <i className="fab fa-linkedin text-2xl"></i>
             </a>
             <a 
-              href="https://drive.google.com/file/d/1j6MtpyIlpU5GvJTfuCu0ltvcQkZyJPwX/view?usp=drive_link" 
+              href="https://drive.google.com/drive/folders/1lNRsAFaP-cn7bKJlbEx8lRbZQSQaMmrC" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-red-400 transition-colors duration-300 hover:scale-110 transform"

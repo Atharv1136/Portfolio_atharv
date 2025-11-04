@@ -30,7 +30,7 @@ export default function Hero() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <a 
-              href="https://drive.google.com/file/d/1j6MtpyIlpU5GvJTfuCu0ltvcQkZyJPwX/view?usp=drive_link" 
+              href="https://drive.google.com/file/d/1oqVyYvwp-y0GcTCZebGdbwdY-8Pchree/view?usp=sharing"
               target="_blank" 
               rel="noopener noreferrer"
               className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-blue-500/25 flex items-center gap-2"
