@@ -26,11 +26,20 @@ export async function connectToDatabase() {
   }
 
   try {
+    if (!uri) {
+      throw new Error('MONGODB_URI is not defined');
+    }
+    
     console.log("🔄 Attempting to connect to MongoDB...");
     console.log(`📍 Connection URI: ${uri.substring(0, 30)}...`);
     
     await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      // Optimize for serverless
+      maxPoolSize: 1, // Limit connections for serverless
+      minPoolSize: 0, // Allow connection pool to close when idle
+      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+      connectTimeoutMS: 10000, // Give up initial connection after 10s
     });
     
     cachedConnection = mongoose.connection;
@@ -53,7 +62,7 @@ export async function connectToDatabase() {
       console.log("✅ MongoDB reconnected");
     });
 
-    return mongoose.connection;
+    return mongoose.connection as mongoose.Connection;
   } catch (error: any) {
     console.error("❌ MongoDB Connection Error:");
     console.error("   Error:", error.message);

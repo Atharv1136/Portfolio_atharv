@@ -118,7 +118,7 @@ export class SimpleStorage implements IStorage {
   }
 
   async createUser(user: { username: string; password: string }): Promise<User> {
-    const id = this.userIdCounter++.toString();
+    const id = String(this.userIdCounter++);
     const newUser: User = { id, ...user };
     this.users.set(id, newUser);
     return newUser;
@@ -159,7 +159,7 @@ export class SimpleStorage implements IStorage {
   }
 
   async createCertification(cert: Partial<Certification>): Promise<Certification> {
-    const id = this.certIdCounter++.toString();
+    const id = String(this.certIdCounter++);
     const newCert: Certification = {
       id,
       company: cert.company || '',
@@ -204,7 +204,7 @@ export class SimpleStorage implements IStorage {
   }
 
   async createHackathon(hackathon: Partial<Hackathon>): Promise<Hackathon> {
-    const id = this.hackIdCounter++.toString();
+    const id = String(this.hackIdCounter++);
     const newHack: Hackathon = {
       id,
       name: hackathon.name || '',
@@ -244,7 +244,7 @@ export class SimpleStorage implements IStorage {
   }
 
   async createProject(project: Partial<Project>): Promise<Project> {
-    const id = this.projectIdCounter++.toString();
+    const id = String(this.projectIdCounter++);
     const newProject: Project = {
       id,
       title: project.title || '',

@@ -187,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const storageInstance = await getStorage();
       const certs = await storageInstance.getAllCertifications();
-      res.json(certs.map(cert => {
+      res.json(certs.map((cert: any) => {
         if ('toObject' in cert) {
           return { ...cert.toObject(), id: cert._id.toString() };
         }
@@ -202,7 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const storageInstance = await getStorage();
       const hackathons = await storageInstance.getAllHackathons();
-      res.json(hackathons.map(hack => {
+      res.json(hackathons.map((hack: any) => {
         if ('toObject' in hack) {
           return { ...hack.toObject(), id: hack._id.toString() };
         }
@@ -217,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const storageInstance = await getStorage();
       const projects = await storageInstance.getAllProjects();
-      res.json(projects.map(project => {
+      res.json(projects.map((project: any) => {
         if ('toObject' in project) {
           return { ...project.toObject(), id: project._id.toString() };
         }
