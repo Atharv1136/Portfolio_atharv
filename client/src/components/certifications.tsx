@@ -1,79 +1,27 @@
 import { useQuery } from '@tanstack/react-query';
 import { getQueryFn } from '@/lib/queryClient';
-import skysCertImage from "@assets/sky_1750507766705_1750945011842.png";
-import goldmanCertImage from "@assets/gmc_1750507766704_1750945011837.png";
-import mastercardCertImage from "@assets/cyb_1750507766703_1750945011835.png";
-import accentureCertImage from "@assets/acc_1750507766702_1750945011833.png";
-
-// Fallback certifications
-const fallbackCertifications = [
-  {
-    id: 1,
-    company: 'Skyscanner',
-    title: 'Software Engineering Job Simulation',
-    issued: 'January 2025',
-    platform: 'Forage',
-    icon: 'fas fa-plane',
-    cardColor: 'bg-blue-500',
-    buttonColor: 'bg-white hover:bg-gray-100 text-blue-500',
-    titleColor: 'text-white',
-    textColor: 'text-blue-100',
-    certImageUrl: skysCertImage,
-    credentialUrl: 'https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/skoQmxqhtgWmKv2pm/p3xGFkpdot5H8NBih_skoQmxqhtgWmKv2pm_QLCuExjPqmfhcSzpp_1738060306337_completion_certificate.pdf'
-  },
-  {
-    id: 2,
-    company: 'Goldman Sachs',
-    title: 'Software Engineering Job Simulation',
-    issued: 'October 2024',
-    platform: 'Forage',
-    icon: 'fas fa-chart-line',
-    cardColor: 'bg-blue-600',
-    buttonColor: 'bg-white hover:bg-gray-100 text-blue-600',
-    titleColor: 'text-white',
-    textColor: 'text-blue-100',
-    certImageUrl: goldmanCertImage,
-    credentialUrl: 'https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/Goldman%20Sachs/NPdeQ43o8P9HJmJzg_Goldman%20Sachs_QLCuExjPqmfhcSzpp_1729656516724_completion_certificate.pdf'
-  },
-  {
-    id: 3,
-    company: 'Mastercard',
-    title: 'Cybersecurity Job Simulation',
-    issued: 'October 2024',
-    platform: 'Forage',
-    icon: 'fas fa-shield-alt',
-    cardColor: 'bg-red-500',
-    buttonColor: 'bg-white hover:bg-gray-100 text-green-500',
-    titleColor: 'text-white',
-    textColor: 'text-green-100',
-    certImageUrl: mastercardCertImage,
-    credentialUrl: 'https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/mastercard/vcKAB5yYAgvemepGQ_mfxGwGDp6WkQmtmTf_QLCuExjPqmfhcSzpp_1729915082752_completion_certificate.pdf'
-  },
-  {
-    id: 4,
-    company: 'Accenture',
-    title: 'Software Engineering Job Simulation',
-    issued: 'June 2025',
-    platform: 'Forage',
-    icon: 'fas fa-shield-alt',
-    cardColor: 'bg-purple-500',
-    buttonColor: 'bg-white hover:bg-gray-100 text-red-500',
-    titleColor: 'text-white',
-    textColor: 'text-purple-100',
-    certImageUrl: accentureCertImage,
-    credentialUrl: 'https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/xhih9yFWsf6AYfngd/HNpZwZcuYwona2d8Y_xhih9yFWsf6AYfngd_QLCuExjPqmfhcSzpp_1751295764925_completion_certificate.pdf'
-  }
-];
 
 export default function Certifications() {
-  const { data: certificationsData } = useQuery<any[]>({
+  const { data: certificationsData, isLoading } = useQuery<any[]>({
     queryKey: ['/api/certifications'],
     queryFn: getQueryFn({ on401: 'returnNull' }),
   });
 
+  if (isLoading) {
+    return (
+      <section id="certifications" className="py-20 lg:py-32">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          <div className="text-center">
+            <p className="text-gray-400">Loading certifications...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   const certifications = certificationsData && certificationsData.length > 0 
     ? certificationsData 
-    : fallbackCertifications;
+    : [];
 
   return (
     <section id="certifications" className="py-20 lg:py-32">
@@ -87,44 +35,54 @@ export default function Certifications() {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
-            {certifications.map((cert) => (
-              <div key={cert.id} className={`${cert.cardColor} rounded-2xl p-6 shadow-2xl transform transition-all duration-300 hover:scale-105`}>
-                {/* Certificate Image */}
-                <div className="bg-white rounded-xl p-4 mb-6 shadow-lg">
-                  <img 
-                    src={cert.certImageUrl?.startsWith('/uploads/') || cert.certImageUrl?.startsWith('http') 
-                      ? cert.certImageUrl 
-                      : cert.certImageUrl || cert.certImage} 
-                    alt={`${cert.company} Certificate`}
-                    className="w-full h-auto rounded-lg"
-                  />
-                </div>
-                
-                {/* Certificate Details */}
-                <div className="text-center">
-                  <h3 className={`text-xl font-bold ${cert.titleColor} mb-2`}>{cert.company}</h3>
-                  <p className={`${cert.titleColor} font-semibold mb-3`}>{cert.title}</p>
-                  <div className={`space-y-1 ${cert.textColor} mb-6 text-sm`}>
-                    <p><strong>Issued:</strong> {cert.issued} • <strong>Platform:</strong> {cert.platform}</p>
-                  </div>
-                  
-                  {/* Show Credential Button */}
-                  {cert.credentialUrl && (
-                    <a 
-                      href={cert.credentialUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className={`inline-flex items-center gap-2 ${cert.buttonColor} py-2 px-6 rounded-lg font-medium transition-colors duration-300`}
-                    >
-                      <i className="fas fa-external-link-alt"></i>
-                      Show Credential
-                    </a>
+          {certifications.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-400 text-lg">No certifications available yet.</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-8">
+              {certifications.map((cert) => (
+                <div key={cert.id} className={`${cert.cardColor || 'bg-blue-500'} rounded-2xl p-6 shadow-2xl transform transition-all duration-300 hover:scale-105`}>
+                  {/* Certificate Image */}
+                  {cert.certImageUrl && (
+                    <div className="bg-white rounded-xl p-4 mb-6 shadow-lg">
+                      <img 
+                        src={cert.certImageUrl} 
+                        alt={`${cert.company || cert.title} Certificate`}
+                        className="w-full h-auto rounded-lg"
+                        onError={(e) => {
+                          // Hide image if it fails to load
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
                   )}
+                  
+                  {/* Certificate Details */}
+                  <div className="text-center">
+                    <h3 className={`text-xl font-bold ${cert.titleColor || 'text-white'} mb-2`}>{cert.company || 'Certificate'}</h3>
+                    <p className={`${cert.titleColor || 'text-white'} font-semibold mb-3`}>{cert.title}</p>
+                    <div className={`space-y-1 ${cert.textColor || 'text-gray-100'} mb-6 text-sm`}>
+                      <p><strong>Issued:</strong> {cert.issued} • <strong>Platform:</strong> {cert.platform}</p>
+                    </div>
+                    
+                    {/* Show Credential Button */}
+                    {cert.credentialUrl && (
+                      <a 
+                        href={cert.credentialUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-2 ${cert.buttonColor || 'bg-white hover:bg-gray-100 text-blue-500'} py-2 px-6 rounded-lg font-medium transition-colors duration-300`}
+                      >
+                        <i className="fas fa-external-link-alt"></i>
+                        Show Credential
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>
