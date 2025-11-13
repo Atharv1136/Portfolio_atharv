@@ -2,22 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { getQueryFn } from '@/lib/queryClient';
 
 export default function Certifications() {
-  const { data: certificationsData, isLoading } = useQuery<any[]>({
+  const { data: certificationsData, isLoading, error } = useQuery<any[]>({
     queryKey: ['/api/certifications'],
     queryFn: getQueryFn({ on401: 'returnNull' }),
   });
-
-  if (isLoading) {
-    return (
-      <section id="certifications" className="py-20 lg:py-32">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8">
-          <div className="text-center">
-            <p className="text-gray-400">Loading certifications...</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   const certifications = certificationsData && certificationsData.length > 0 
     ? certificationsData 
@@ -35,7 +23,18 @@ export default function Certifications() {
             </p>
           </div>
           
-          {certifications.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-12">
+              <p className="text-gray-400 text-lg">Loading certifications...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-400 text-lg">Error loading certifications. Please try again later.</p>
+              {process.env.NODE_ENV === 'development' && error instanceof Error && (
+                <p className="text-gray-500 text-sm mt-2">{error.message}</p>
+              )}
+            </div>
+          ) : certifications.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-400 text-lg">No certifications available yet.</p>
             </div>
