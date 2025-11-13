@@ -19,23 +19,16 @@ console.log(`   MONGODB_URI: ${process.env.MONGODB_URI ? '✅ Set' : '❌ Not se
 console.log(`   SESSION_SECRET: ${process.env.SESSION_SECRET ? '✅ Set' : '❌ Not set'}\n`);
 
 const app = express();
+
+// Trust proxy (important for Render, Vercel, etc.)
+app.set('trust proxy', 1);
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session configuration
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    },
-  })
-);
+// Session configuration - will be set up after MongoDB connection if needed
+let sessionMiddleware: any = null;
 
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
@@ -74,12 +67,14 @@ app.use((req, res, next) => {
   // Connect to database (if using MongoDB)
   console.log(`\n🔍 Storage Type: ${STORAGE_TYPE}`);
   
+  let mongoConnection: any = null;
+  
   if (STORAGE_TYPE === 'mongodb') {
     console.log("📦 Loading MongoDB storage...");
     try {
       const { connectToDatabase } = await import("./mongodb");
       console.log("🔄 Connecting to MongoDB Atlas...");
-      await connectToDatabase();
+      mongoConnection = await connectToDatabase();
       console.log("✅ MongoDB storage ready!\n");
     } catch (error: any) {
       console.error("\n❌ Failed to connect to MongoDB:");
@@ -96,6 +91,45 @@ app.use((req, res, next) => {
     console.log("📝 Using simple in-memory storage (no database required)");
     console.log("💡 To use MongoDB, set STORAGE_TYPE=mongodb in .env\n");
   }
+
+  // Configure session store based on storage type
+  let sessionStore: any = undefined;
+  
+  if (STORAGE_TYPE === 'mongodb' && mongoConnection) {
+    try {
+      const MongoStore = (await import('connect-mongo')).default;
+      
+      sessionStore = MongoStore.create({
+        client: mongoConnection.getClient() as any,
+        stringify: false,
+      });
+      console.log('✅ MongoDB session store configured');
+    } catch (error: any) {
+      console.warn('⚠️  Could not set up MongoDB session store, using memory store:', error.message);
+    }
+  }
+
+  // Session configuration - optimized for Render and production
+  const isProduction = process.env.NODE_ENV === 'production';
+  // On Render, detect if we're behind HTTPS proxy
+  const useSecureCookies = isProduction && process.env.FORCE_HTTPS === 'true';
+  
+  const sessionConfig: session.SessionOptions = {
+    secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
+    resave: false,
+    saveUninitialized: false,
+    store: sessionStore,
+    cookie: {
+      secure: useSecureCookies, // Only secure if explicitly forced
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax', // 'lax' works better with proxies like Render
+    },
+  };
+
+  sessionMiddleware = session(sessionConfig);
+  app.use(sessionMiddleware);
+  console.log('✅ Session middleware configured');
 
   // Auto-create admin user if it doesn't exist (only on first run)
   try {
