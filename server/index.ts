@@ -66,9 +66,9 @@ app.use((req, res, next) => {
 (async () => {
   // Connect to database (if using MongoDB)
   console.log(`\n🔍 Storage Type: ${STORAGE_TYPE}`);
-  
+
   let mongoConnection: any = null;
-  
+
   if (STORAGE_TYPE === 'mongodb') {
     console.log("📦 Loading MongoDB storage...");
     try {
@@ -94,11 +94,11 @@ app.use((req, res, next) => {
 
   // Configure session store based on storage type
   let sessionStore: any = undefined;
-  
+
   if (STORAGE_TYPE === 'mongodb' && mongoConnection) {
     try {
       const MongoStore = (await import('connect-mongo')).default;
-      
+
       sessionStore = MongoStore.create({
         client: mongoConnection.getClient() as any,
         stringify: false,
@@ -113,7 +113,7 @@ app.use((req, res, next) => {
   const isProduction = process.env.NODE_ENV === 'production';
   // On Render, detect if we're behind HTTPS proxy
   const useSecureCookies = isProduction && process.env.FORCE_HTTPS === 'true';
-  
+
   const sessionConfig: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
     resave: false,
@@ -133,7 +133,7 @@ app.use((req, res, next) => {
 
   // Auto-create admin user if it doesn't exist (only on first run)
   try {
-    const storageModule = STORAGE_TYPE === 'mongodb' 
+    const storageModule = STORAGE_TYPE === 'mongodb'
       ? await import("./storage.mongodb")
       : await import("./storage.simple");
     const storage = storageModule.storage;
@@ -173,11 +173,11 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  const host = process.platform === 'win32' ? '127.0.0.1' : '0.0.0.0';
+  // Use PORT from environment variables (for Digital Ocean, Heroku, etc.)
+  // or default to 5000 for local development
+  const port = parseInt(process.env.PORT || "5000", 10);
+  const host = "0.0.0.0"; // Listen on all interfaces
+
   server.listen(port, host, () => {
     log(`serving on port ${port}`);
   });
