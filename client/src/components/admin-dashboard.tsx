@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { X, Plus, Trash2, Save, Edit2, Eye } from 'lucide-react';
+import { X, Plus, Trash2, Save, Edit2, Eye, FileText } from 'lucide-react';
+import { useLocation } from "wouter";
 
 interface AdminDashboardProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface AdminDashboardProps {
 
 export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDashboardProps) {
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState('about');
 
   // Fetch data
@@ -45,6 +47,11 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
     enabled: open && activeTab === 'projects',
   });
 
+  const { data: blogs, refetch: refetchBlogs } = useQuery<any[]>({
+    queryKey: ['/api/admin/blogs'], // Use admin endpoint to get all blogs
+    enabled: open && activeTab === 'blog',
+  });
+
   // Edit states
   const [editingCert, setEditingCert] = useState<any | null>(null);
   const [editingHackathon, setEditingHackathon] = useState<any | null>(null);
@@ -57,6 +64,7 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
     languages: '',
     skills: [] as string[],
     tools: [] as string[],
+    resumeUrl: '',
   });
 
   // Initialize form when data loads
@@ -68,6 +76,7 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
         languages: aboutData.languages || '',
         skills: aboutData.skills || [],
         tools: aboutData.tools || [],
+        resumeUrl: aboutData.resumeUrl || '',
       });
     }
   }, [aboutData]);
@@ -218,6 +227,18 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
     },
   });
 
+  // Delete Blog mutation
+  const deleteBlogMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest('DELETE', `/api/admin/blogs/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/blogs'] });
+      refetchBlogs();
+      alert('Blog post deleted successfully!');
+    },
+  });
+
   const handleAboutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     saveAboutMutation.mutate(aboutForm);
@@ -323,6 +344,7 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
             <TabsTrigger value="certifications" className="data-[state=active]:bg-blue-500">Certifications</TabsTrigger>
             <TabsTrigger value="projects" className="data-[state=active]:bg-blue-500">Projects</TabsTrigger>
             <TabsTrigger value="hackathons" className="data-[state=active]:bg-blue-500">Hackathons</TabsTrigger>
+            <TabsTrigger value="blog" className="data-[state=active]:bg-blue-500">Blog</TabsTrigger>
           </TabsList>
 
           {/* About Tab */}
@@ -339,7 +361,9 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
                   <div><span className="text-gray-400">Education:</span> <span className="text-white">{aboutData.education || 'Not set'}</span></div>
                   <div><span className="text-gray-400">Languages:</span> <span className="text-white">{aboutData.languages || 'Not set'}</span></div>
                   <div><span className="text-gray-400">Skills:</span> <span className="text-white">{aboutData.skills?.length > 0 ? aboutData.skills.join(', ') : 'None'}</span></div>
+                  <div><span className="text-gray-400">Skills:</span> <span className="text-white">{aboutData.skills?.length > 0 ? aboutData.skills.join(', ') : 'None'}</span></div>
                   <div><span className="text-gray-400">Tools:</span> <span className="text-white">{aboutData.tools?.length > 0 ? aboutData.tools.join(', ') : 'None'}</span></div>
+                  <div><span className="text-gray-400">Resume:</span> <span className="text-white">{aboutData.resumeUrl || 'Not set'}</span></div>
                 </div>
               ) : (
                 <p className="text-gray-400 text-sm">No about data set yet. Use the form below to add your information.</p>
@@ -442,6 +466,17 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
                   ))}
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="resumeUrl">Resume URL</Label>
+                <Input
+                  id="resumeUrl"
+                  value={aboutForm.resumeUrl}
+                  onChange={(e) => setAboutForm({ ...aboutForm, resumeUrl: e.target.value })}
+                  className="bg-gray-800 border-gray-700 text-white"
+                  placeholder="https://example.com/resume.pdf"
+                />
+              </div>
+
 
               <Button
                 type="submit"
@@ -717,7 +752,7 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
               e.preventDefault();
               const form = e.target as HTMLFormElement;
               const formData = new FormData(form);
-              
+
               // Validate required fields
               const title = formData.get('title') as string;
               const description = formData.get('description') as string;
@@ -729,7 +764,7 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
                 alert('Please fill in all required fields (Title, Description, Image URL, Alt Text, GitHub URL)');
                 return;
               }
-              
+
               // Parse technologies from comma-separated string
               const techString = formData.get('technologies') as string;
               const technologies = techString ? techString.split(',').map(t => {
@@ -748,9 +783,9 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
                 primaryColor: (formData.get('primaryColor') as string) || 'blue',
                 displayOrder: parseInt((formData.get('displayOrder') as string) || '0') || 0,
               };
-              
+
               console.log('Form submitted with data:', data);
-              
+
               if (editingProject) {
                 updateProjectMutation.mutate({ id: editingProject.id, data }, {
                   onSuccess: () => {
@@ -937,6 +972,84 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
                 </div>
               ) : (
                 <p className="text-gray-400 text-sm">No projects added yet.</p>
+              )}
+            </div>
+          </TabsContent>
+          {/* Blog Tab */}
+          <TabsContent value="blog" className="space-y-4 mt-4">
+            <div className="flex justify-between items-center bg-gray-800 p-4 rounded-lg">
+              <div>
+                <h3 className="text-lg font-semibold">Manage Blog Posts</h3>
+                <p className="text-sm text-gray-400">Create, edit, and delete your blog articles.</p>
+              </div>
+              <Button onClick={() => {
+                onOpenChange(false); // Close dashboard
+                setLocation("/admin/blog/new");
+              }} className="bg-blue-500 hover:bg-blue-600">
+                <Plus className="h-4 w-4 mr-2" /> New Post
+              </Button>
+            </div>
+
+            <div className="space-y-4 mt-6">
+              <h3 className="text-lg font-semibold">All Posts ({blogs?.length || 0})</h3>
+              {blogs && blogs.length > 0 ? (
+                <div className="space-y-3">
+                  {blogs.map((blog: any) => (
+                    <div
+                      key={blog.id}
+                      className="p-4 bg-gray-800 rounded-lg border border-gray-700"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-lg">{blog.title}</h4>
+                          <p className="text-sm text-gray-400 mt-1">
+                            {blog.isPublished ? <span className="text-green-400">Published</span> : <span className="text-yellow-400">Draft</span>}
+                            {' • '}
+                            {new Date(blog.createdAt).toLocaleDateString()}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1 truncate max-w-md">{blog.excerpt}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              onOpenChange(false);
+                              setLocation(`/admin/blog/edit/${blog.id}`);
+                            }}
+                            className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              onOpenChange(false);
+                              setLocation(`/blog/${blog.slug}`);
+                            }}
+                            className="text-gray-400 hover:text-white"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              if (confirm('Are you sure you want to delete this blog post?')) {
+                                deleteBlogMutation.mutate(blog.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm">No blog posts found.</p>
               )}
             </div>
           </TabsContent>

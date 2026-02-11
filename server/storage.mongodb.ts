@@ -19,6 +19,10 @@ import {
   Project,
   type IProject,
 } from './models/project.model';
+import {
+  Blog,
+  type IBlog,
+} from './models/blog.model';
 
 export interface IStorage {
   // User methods
@@ -34,6 +38,7 @@ export interface IStorage {
     languages: string;
     skills: string[];
     tools: string[];
+    resumeUrl?: string;
   }): Promise<IAboutData>;
 
   // Certification methods
@@ -56,6 +61,14 @@ export interface IStorage {
   createProject(project: Partial<IProject>): Promise<IProject>;
   updateProject(id: string, project: Partial<IProject>): Promise<IProject | null>;
   deleteProject(id: string): Promise<boolean>;
+
+  // Blog methods
+  getAllBlogs(onlyPublished?: boolean): Promise<IBlog[]>;
+  getBlogBySlug(slug: string): Promise<IBlog | null>;
+  getBlogById(id: string): Promise<IBlog | null>;
+  createBlog(blog: Partial<IBlog>): Promise<IBlog>;
+  updateBlog(id: string, blog: Partial<IBlog>): Promise<IBlog | null>;
+  deleteBlog(id: string): Promise<boolean>;
 }
 
 export class MongoDBStorage implements IStorage {
@@ -67,21 +80,21 @@ export class MongoDBStorage implements IStorage {
   async getUserByUsername(username: string): Promise<IUser | null> {
     try {
       const searchUsername = username.trim();
-      console.log('🔍 MongoDB getUserByUsername:', { 
+      console.log('🔍 MongoDB getUserByUsername:', {
         searched: searchUsername,
         mongooseReady: mongoose.connection.readyState,
         dbName: mongoose.connection.db?.databaseName
       });
-      
+
       // Check if MongoDB is connected
       if (mongoose.connection.readyState !== 1) {
         console.error('❌ MongoDB not connected! ReadyState:', mongoose.connection.readyState);
         throw new Error('MongoDB not connected');
       }
-      
+
       const user = await User.findOne({ username: searchUsername });
-      console.log('🔍 getUserByUsername result:', { 
-        searched: searchUsername, 
+      console.log('🔍 getUserByUsername result:', {
+        searched: searchUsername,
         found: user ? 'yes' : 'no',
         userId: user?._id,
         username: user?.username
@@ -109,6 +122,7 @@ export class MongoDBStorage implements IStorage {
     languages: string;
     skills: string[];
     tools: string[];
+    resumeUrl?: string;
   }): Promise<IAboutData> {
     const existing = await this.getAboutData();
     if (existing) {
@@ -201,6 +215,39 @@ export class MongoDBStorage implements IStorage {
 
   async deleteProject(id: string): Promise<boolean> {
     const result = await Project.findByIdAndDelete(id);
+    return result !== null;
+  }
+
+  // Blog methods
+  async getAllBlogs(onlyPublished = false): Promise<IBlog[]> {
+    const query = onlyPublished ? { isPublished: true } : {};
+    return await Blog.find(query).sort({ createdAt: -1 });
+  }
+
+  async getBlogBySlug(slug: string): Promise<IBlog | null> {
+    return await Blog.findOne({ slug });
+  }
+
+  async getBlogById(id: string): Promise<IBlog | null> {
+    return await Blog.findById(id);
+  }
+
+  async createBlog(blog: Partial<IBlog>): Promise<IBlog> {
+    const newBlog = new Blog(blog);
+    return await newBlog.save();
+  }
+
+  async updateBlog(id: string, blog: Partial<IBlog>): Promise<IBlog | null> {
+    const updated = await Blog.findByIdAndUpdate(
+      id,
+      { ...blog, updatedAt: new Date() },
+      { new: true }
+    );
+    return updated;
+  }
+
+  async deleteBlog(id: string): Promise<boolean> {
+    const result = await Blog.findByIdAndDelete(id);
     return result !== null;
   }
 }

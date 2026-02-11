@@ -28,6 +28,17 @@ export default function Navbar() {
   }, []);
 
   const scrollToSection = (sectionId: string) => {
+    if (sectionId === 'blog') {
+      window.location.href = '/blog';
+      return;
+    }
+
+    // If we are not on the home page, redirect to home with hash
+    if (window.location.pathname !== '/') {
+      window.location.href = `/#${sectionId}`;
+      return;
+    }
+
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -54,7 +65,7 @@ export default function Navbar() {
 
     e.preventDefault();
     const currentTime = Date.now();
-    
+
     // Check if more than 2 seconds have passed since last click (reset timer)
     if (lastClickTime > 0 && currentTime - lastClickTime > 2000) {
       // Reset counter and reload page on single click after timeout
@@ -84,7 +95,7 @@ export default function Navbar() {
     if ((window as any).nameClickTimeout) {
       clearTimeout((window as any).nameClickTimeout);
     }
-    
+
     // Set new timeout to reload if no more clicks within 2 seconds
     (window as any).nameClickTimeout = setTimeout(() => {
       if (newCount === 1) {
@@ -95,31 +106,33 @@ export default function Navbar() {
     }, 2000);
   };
 
+  const navItems = [
+    { id: 'home', label: 'Home' },
+    { id: 'about', label: 'About' },
+    { id: 'projects', label: 'Projects' },
+    { id: 'certifications', label: 'Certifications' },
+    { id: 'blog', label: 'Blog' },
+    { id: 'contact', label: 'Contact' }
+  ];
+
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 navbar-transition ${
-      isScrolled ? 'bg-black bg-opacity-95 glass-effect' : 'bg-transparent'
-    }`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 navbar-transition ${isScrolled ? 'bg-black bg-opacity-95 glass-effect' : 'bg-transparent'
+      }`}>
       <div className="max-w-7xl mx-auto px-6 sm:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           <div className="flex-shrink-0">
-            <button 
+            <button
               onClick={handleNameClick}
               className="text-xl font-bold text-white hover:text-blue-400 transition-colors cursor-pointer"
             >
               Atharv Bhosale
             </button>
           </div>
-          
+
           {/* Desktop Navigation */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-center space-x-8">
-              {[
-                { id: 'home', label: 'Home' },
-                { id: 'about', label: 'About' },
-                { id: 'projects', label: 'Projects' },
-                { id: 'certifications', label: 'Certifications' },
-                { id: 'contact', label: 'Contact' }
-              ].map((item) => (
+              {navItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
@@ -130,10 +143,10 @@ export default function Navbar() {
               ))}
             </div>
           </div>
-          
+
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center space-x-4">
-            <button 
+            <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="text-white hover:text-blue-400 focus:outline-none"
             >
@@ -142,18 +155,12 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-      
+
       {/* Mobile Navigation */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-black bg-opacity-95 glass-effect">
           <div className="px-2 pt-2 pb-3 space-y-1">
-            {[
-              { id: 'home', label: 'Home' },
-              { id: 'about', label: 'About' },
-              { id: 'projects', label: 'Projects' },
-              { id: 'certifications', label: 'Certifications' },
-              { id: 'contact', label: 'Contact' }
-            ].map((item) => (
+            {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
@@ -165,7 +172,7 @@ export default function Navbar() {
           </div>
         </div>
       )}
-      
+
       {/* Admin Login Dialog */}
       {showLoginDialog && (
         <AdminLoginDialog

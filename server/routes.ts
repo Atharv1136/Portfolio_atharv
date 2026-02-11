@@ -26,7 +26,7 @@ async function getStorage() {
     console.log(`   STORAGE_TYPE from env: ${process.env.STORAGE_TYPE || 'undefined'}`);
     console.log(`   Using STORAGE_TYPE: ${STORAGE_TYPE}`);
 
-    const storageModule = STORAGE_TYPE === 'mongodb' 
+    const storageModule = STORAGE_TYPE === 'mongodb'
       ? await import("./storage.mongodb")
       : await import("./storage.simple");
     storageCache = storageModule.storage;
@@ -110,7 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, password } = req.body;
       console.log('🔐 Login attempt:', { username, passwordProvided: !!password });
-      
+
       if (!username || !password) {
         return res.status(400).json({ message: "Username and password are required" });
       }
@@ -119,7 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const storageInstance = await getStorage();
       const user = await storageInstance.getUserByUsername(username);
       console.log('👤 User lookup result:', user ? 'Found user' : 'User not found');
-      
+
       if (!user) {
         console.log('❌ User not found:', username);
         return res.status(401).json({ message: "Invalid credentials" });
@@ -128,7 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('🔑 Comparing password...');
       const isValid = await bcrypt.compare(password, user.password);
       console.log('🔑 Password comparison result:', isValid);
-      
+
       if (!isValid) {
         console.log('❌ Invalid password for user:', username);
         return res.status(401).json({ message: "Invalid credentials" });
@@ -136,25 +136,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userId = getId(user);
       console.log('✅ Login successful for user:', username, 'ID:', userId);
-      
+
       // Set session data
       (req.session as any).userId = userId;
       (req.session as any).username = user.username;
-      
+
       // Save session and then send response
       req.session.save((err) => {
         if (err) {
           console.error('❌ Session save error:', err);
           return res.status(500).json({ message: "Failed to save session" });
         }
-        
+
         // Log session info for debugging
         console.log('✅ Session saved:', {
           sessionId: req.sessionID,
           userId: (req.session as any).userId,
           username: (req.session as any).username
         });
-        
+
         res.json({ message: "Login successful", user: { id: userId, username: user.username } });
       });
     } catch (error: any) {
@@ -185,7 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(null);
       }
       // Handle both MongoDB (has _id) and simple storage (has id)
-      const aboutData = 'toObject' in about 
+      const aboutData = 'toObject' in about
         ? { ...about.toObject(), id: about._id.toString() }
         : { ...about };
       res.json(aboutData);
@@ -240,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes (require authentication)
-  
+
   // About management
   app.put("/api/admin/about", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
@@ -251,6 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         languages: req.body.languages,
         skills: Array.isArray(req.body.skills) ? req.body.skills : [],
         tools: Array.isArray(req.body.tools) ? req.body.tools : [],
+        resumeUrl: req.body.resumeUrl || "",
       };
       const about = await storageInstance.upsertAboutData(aboutData);
       res.json(normalizeItem(about));
@@ -412,11 +413,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/projects", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       console.log('Received project data:', req.body);
-      
+
       // Validate required fields
       if (!req.body.title || !req.body.description || !req.body.imageUrl || !req.body.alt || !req.body.githubUrl) {
-        return res.status(400).json({ 
-          message: 'Missing required fields: title, description, imageUrl, alt, and githubUrl are required' 
+        return res.status(400).json({
+          message: 'Missing required fields: title, description, imageUrl, alt, and githubUrl are required'
         });
       }
 
@@ -481,6 +482,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
+  });
+
+  // Create admin user (one-time setup, should be protected in production)
+  app.post("/api/admin/create-user", async (req: Request, res: Response) => {
+    try {
+      const { username, password } = req.body;
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
+      }
+
+      const storageInstance = await getStorage();
+      const existingUser = await storageInstance.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = await storageInstance.createUser({
+        username,
+        password: hashedPassword,
+      });
+
+      res.json({ message: "User created", user: { id: getId(user), username: user.username } });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Blog Routes
+
+  // Public: Get all published blogs
+  app.get("/api/blogs", async (req: Request, res: Response) => {
+    try {
+      const storageInstance = await getStorage();
+      const blogs = await storageInstance.getAllBlogs(true); // onlyPublished = true
+      res.json(blogs.map(normalizeItem));
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Public: Get blog by slug
+  app.get("/api/blogs/:slug", async (req: Request, res: Response) => {
+    try {
+      const storageInstance = await getStorage();
+      const blog = await storageInstance.getBlogBySlug(req.params.slug);
+      if (!blog) {
+        return res.status(404).json({ message: "Blog post not found" });
+      }
+      res.json(normalizeItem(blog));
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin Routes (Protected)
+
+  // Get all blogs (including unpublished)
+  app.get("/api/admin/blogs", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const storageInstance = await getStorage();
+      const blogs = await storageInstance.getAllBlogs(false); // onlyPublished = false, get all
+      res.json(blogs.map(normalizeItem));
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get blog by ID (for admin editing)
+  app.get("/api/admin/blogs/:id", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const storageInstance = await getStorage();
+      const blog = await storageInstance.getBlogById(req.params.id);
+      if (!blog) {
+        return res.status(404).json({ message: "Blog post not found" });
+      }
+      res.json(normalizeItem(blog));
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Create new blog
+  app.post("/api/admin/blogs", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { title, slug, content, excerpt, coverImage, tags, isPublished, seoTitle, seoDescription, seoKeywords } = req.body;
+
+      if (!title || !slug || !content) {
+        return res.status(400).json({ message: "Title, slug, and content are required" });
+      }
+
+      const blogData = {
+        title,
+        slug,
+        content,
+        excerpt: excerpt || content.substring(0, 150) + "...",
+        coverImage: coverImage || "https://images.unsplash.com/photo-1499750310159-5b5fce9e3451", // Default placeholder
+        author: req.username || "Admin",
+        tags: Array.isArray(tags) ? tags : [],
+        isPublished: !!isPublished,
+        publishedAt: isPublished ? new Date() : null,
+        seoTitle: seoTitle || title,
+        seoDescription: seoDescription || excerpt || "",
+        seoKeywords: Array.isArray(seoKeywords) ? seoKeywords : [],
+      };
+
+      const storageInstance = await getStorage();
+
+      // Check for duplicate slug
+      const existing = await storageInstance.getBlogBySlug(slug);
+      if (existing) {
+        return res.status(400).json({ message: "Slug already exists" });
+      }
+
+      const newBlog = await storageInstance.createBlog(blogData);
+      res.json(normalizeItem(newBlog));
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Update blog
+  app.put("/api/admin/blogs/:id", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const id = req.params.id;
+      const { title, slug, content, excerpt, coverImage, tags, isPublished, seoTitle, seoDescription, seoKeywords } = req.body;
+
+      const updateData: any = {
+        title,
+        slug,
+        content,
+        excerpt,
+        coverImage,
+        tags,
+        isPublished,
+        seoTitle,
+        seoDescription,
+        seoKeywords,
+      };
+
+      // Set publishedAt if it's being published for the first time or verified
+      if (isPublished) {
+        updateData.publishedAt = new Date(); // Or keep original if desired logic
+      }
+
+      const storageInstance = await getStorage();
+
+      // Check for duplicate slug if slug changed (omitted for simplicity, but good practice)
+
+      const updatedBlog = await storageInstance.updateBlog(id, updateData);
+      if (!updatedBlog) {
+        return res.status(404).json({ message: "Blog post not found" });
+      }
+      res.json(normalizeItem(updatedBlog));
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Delete blog
+  app.delete("/api/admin/blogs/:id", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const id = req.params.id;
+      const storageInstance = await getStorage();
+      const success = await storageInstance.deleteBlog(id);
+      if (!success) {
+        return res.status(404).json({ message: "Blog post not found" });
+      }
+      res.json({ message: "Blog post deleted" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Upload image handler specific for blog (or general use)
+  app.post("/api/upload", requireAuth, upload.single("image"), (req: Request, res: Response) => {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    const imageUrl = `/uploads/${req.file.filename}`;
+    res.json({ imageUrl });
   });
 
   // Create admin user (one-time setup, should be protected in production)

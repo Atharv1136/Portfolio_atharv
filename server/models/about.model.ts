@@ -6,6 +6,7 @@ export interface IAboutData extends Document {
   languages: string;
   skills: string[];
   tools: string[];
+  resumeUrl?: string;
   updatedAt: Date;
 }
 
@@ -31,6 +32,11 @@ const AboutDataSchema = new Schema<IAboutData>({
     type: [String],
     required: true,
     default: [],
+  },
+  resumeUrl: {
+    type: String,
+    required: false,
+    default: "",
   },
   updatedAt: {
     type: Date,
