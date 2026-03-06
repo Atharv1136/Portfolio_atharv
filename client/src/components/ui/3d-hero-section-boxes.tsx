@@ -4,16 +4,18 @@ import React, { useEffect, useRef, useState } from 'react';
 import Spline from '@splinetool/react-spline';
 
 function HeroSplineBackground() {
-    const [isMobile, setIsMobile] = useState(false);
+    const [isDesktop, setIsDesktop] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 768);
+        setIsMounted(true);
+        const checkDesktop = () => {
+            setIsDesktop(window.innerWidth >= 768);
         };
 
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
+        checkDesktop();
+        window.addEventListener('resize', checkDesktop);
+        return () => window.removeEventListener('resize', checkDesktop);
     }, []);
 
     return (
@@ -24,7 +26,7 @@ function HeroSplineBackground() {
             pointerEvents: 'auto',
             overflow: 'hidden',
         }}>
-            {!isMobile ? (
+            {isMounted && isDesktop ? (
                 <Spline
                     style={{
                         width: '100%',
@@ -37,7 +39,7 @@ function HeroSplineBackground() {
                 <div style={{
                     width: '100%',
                     height: '100vh',
-                    background: 'radial-gradient(circle at center, #1a1a2e 0%, #000000 100%)',
+                    background: 'black',
                 }} />
             )}
             <div
