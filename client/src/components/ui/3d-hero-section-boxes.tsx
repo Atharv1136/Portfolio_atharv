@@ -1,9 +1,21 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Spline from '@splinetool/react-spline';
 
 function HeroSplineBackground() {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     return (
         <div style={{
             position: 'relative',
@@ -12,14 +24,22 @@ function HeroSplineBackground() {
             pointerEvents: 'auto',
             overflow: 'hidden',
         }}>
-            <Spline
-                style={{
+            {!isMobile ? (
+                <Spline
+                    style={{
+                        width: '100%',
+                        height: '100vh',
+                        pointerEvents: 'auto',
+                    }}
+                    scene="https://prod.spline.design/dJqTIQ-tE3ULUPMi/scene.splinecode"
+                />
+            ) : (
+                <div style={{
                     width: '100%',
                     height: '100vh',
-                    pointerEvents: 'auto',
-                }}
-                scene="https://prod.spline.design/dJqTIQ-tE3ULUPMi/scene.splinecode"
-            />
+                    background: 'radial-gradient(circle at center, #1a1a2e 0%, #000000 100%)',
+                }} />
+            )}
             <div
                 style={{
                     position: 'absolute',
