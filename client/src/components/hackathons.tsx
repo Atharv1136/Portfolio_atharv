@@ -74,12 +74,12 @@ export default function Hackathons() {
     queryFn: getQueryFn({ on401: 'returnNull' }),
   });
 
-  const hackathons = hackathonsData && hackathonsData.length > 0 
-    ? hackathonsData 
-    : fallbackHackathons;         
+  const hackathons = hackathonsData && hackathonsData.length > 0
+    ? hackathonsData
+    : fallbackHackathons;
 
   return (
-    <section id="hackathons" className="py-20 lg:py-32 bg-gray-900 bg-opacity-50 scroll-mt-20">
+    <section id="hackathons" className="section-dark-secondary py-20 lg:py-32 scroll-mt-20">
       <div className="max-w-7xl mx-auto px-6 sm:px-8">
         <div className="section-reveal">
           <div className="text-center mb-16">
@@ -89,7 +89,7 @@ export default function Hackathons() {
               Collaborative problem-solving and innovation through competitive programming events
             </p>
           </div>
-          
+
           <div className="relative max-w-4xl mx-auto">
             {/* Timeline line */}
             <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-blue-500 z-0"></div>

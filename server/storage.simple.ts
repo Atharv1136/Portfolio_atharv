@@ -63,6 +63,18 @@ interface Project {
   updatedAt: Date;
 }
 
+interface Experience {
+  id: string;
+  company: string;
+  role: string;
+  description: string;
+  duration: string;
+  logoUrl?: string;
+  displayOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface IStorage {
   getUser(id: string): Promise<User | null>;
   getUserByUsername(username: string): Promise<User | null>;
@@ -94,6 +106,12 @@ export interface IStorage {
   createProject(project: Partial<Project>): Promise<Project>;
   updateProject(id: string, project: Partial<Project>): Promise<Project | null>;
   deleteProject(id: string): Promise<boolean>;
+
+  getAllExperiences(): Promise<Experience[]>;
+  getExperience(id: string): Promise<Experience | null>;
+  createExperience(data: Partial<Experience>): Promise<Experience>;
+  updateExperience(id: string, data: Partial<Experience>): Promise<Experience | null>;
+  deleteExperience(id: string): Promise<boolean>;
 }
 
 export class SimpleStorage implements IStorage {
@@ -102,10 +120,12 @@ export class SimpleStorage implements IStorage {
   private certifications: Map<string, Certification> = new Map();
   private hackathons: Map<string, Hackathon> = new Map();
   private projects: Map<string, Project> = new Map();
+  private experiences: Map<string, Experience> = new Map();
   private userIdCounter = 1;
   private certIdCounter = 1;
   private hackIdCounter = 1;
   private projectIdCounter = 1;
+  private experienceIdCounter = 1;
 
   // User methods
   async getUser(id: string): Promise<User | null> {
@@ -273,6 +293,45 @@ export class SimpleStorage implements IStorage {
 
   async deleteProject(id: string): Promise<boolean> {
     return this.projects.delete(id);
+  }
+
+  // Experience methods
+  async getAllExperiences(): Promise<Experience[]> {
+    return Array.from(this.experiences.values())
+      .sort((a, b) => a.displayOrder - b.displayOrder);
+  }
+
+  async getExperience(id: string): Promise<Experience | null> {
+    return this.experiences.get(id) || null;
+  }
+
+  async createExperience(data: Partial<Experience>): Promise<Experience> {
+    const id = String(this.experienceIdCounter++);
+    const newExp: Experience = {
+      id,
+      company: data.company || '',
+      role: data.role || '',
+      description: data.description || '',
+      duration: data.duration || '',
+      logoUrl: data.logoUrl,
+      displayOrder: data.displayOrder || 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.experiences.set(id, newExp);
+    return newExp;
+  }
+
+  async updateExperience(id: string, data: Partial<Experience>): Promise<Experience | null> {
+    const existing = this.experiences.get(id);
+    if (!existing) return null;
+    const updated = { ...existing, ...data, updatedAt: new Date() };
+    this.experiences.set(id, updated);
+    return updated;
+  }
+
+  async deleteExperience(id: string): Promise<boolean> {
+    return this.experiences.delete(id);
   }
 }
 

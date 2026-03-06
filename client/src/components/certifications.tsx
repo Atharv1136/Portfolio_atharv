@@ -7,12 +7,12 @@ export default function Certifications() {
     queryFn: getQueryFn({ on401: 'returnNull' }),
   });
 
-  const certifications = certificationsData && certificationsData.length > 0 
-    ? certificationsData 
+  const certifications = certificationsData && certificationsData.length > 0
+    ? certificationsData
     : [];
 
   return (
-    <section id="certifications" className="py-20 lg:py-32 scroll-mt-20">
+    <section id="certifications" className="section-dark-primary py-20 lg:py-32 scroll-mt-20">
       <div className="max-w-7xl mx-auto px-6 sm:px-8">
         <div className="section-reveal">
           <div className="text-center mb-16">
@@ -22,7 +22,7 @@ export default function Certifications() {
               Professional certifications and job simulations from leading technology companies
             </p>
           </div>
-          
+
           {isLoading ? (
             <div className="text-center py-12">
               <p className="text-gray-400 text-lg">Loading certifications...</p>
@@ -45,8 +45,8 @@ export default function Certifications() {
                   {/* Certificate Image */}
                   {cert.certImageUrl && (
                     <div className="bg-white rounded-xl p-4 mb-6 shadow-lg">
-                      <img 
-                        src={cert.certImageUrl} 
+                      <img
+                        src={cert.certImageUrl}
                         alt={`${cert.company || cert.title} Certificate`}
                         className="w-full h-auto rounded-lg"
                         onError={(e) => {
@@ -56,7 +56,7 @@ export default function Certifications() {
                       />
                     </div>
                   )}
-                  
+
                   {/* Certificate Details */}
                   <div className="text-center">
                     <h3 className={`text-xl font-bold ${cert.titleColor || 'text-white'} mb-2`}>{cert.company || 'Certificate'}</h3>
@@ -64,12 +64,12 @@ export default function Certifications() {
                     <div className={`space-y-1 ${cert.textColor || 'text-gray-100'} mb-6 text-sm`}>
                       <p><strong>Issued:</strong> {cert.issued} • <strong>Platform:</strong> {cert.platform}</p>
                     </div>
-                    
+
                     {/* Show Credential Button */}
                     {cert.credentialUrl && (
-                      <a 
-                        href={cert.credentialUrl} 
-                        target="_blank" 
+                      <a
+                        href={cert.credentialUrl}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className={`inline-flex items-center gap-2 ${cert.buttonColor || 'bg-white hover:bg-gray-100 text-blue-500'} py-2 px-6 rounded-lg font-medium transition-colors duration-300`}
                       >

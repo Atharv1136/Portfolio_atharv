@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import Navbar from '@/components/navbar';
 import Hero from '@/components/hero';
 import About from '@/components/about';
+import Experience from '@/components/experience';
 import Projects from '@/components/projects';
 import Certifications from '@/components/certifications';
 import Hackathons from '@/components/hackathons';
@@ -50,6 +51,7 @@ export default function Home() {
       <Navbar />
       <Hero />
       <About />
+      <Experience />
       <Projects />
       <Certifications />
       <Hackathons />

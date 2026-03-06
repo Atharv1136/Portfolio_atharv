@@ -70,7 +70,7 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="py-20 lg:py-32 scroll-mt-20">
+    <section id="contact" className="section-dark-primary py-20 lg:py-32 scroll-mt-20">
       <div className="max-w-4xl mx-auto px-6 sm:px-8">
         <div className="section-reveal">
           <div className="text-center mb-16">
@@ -80,7 +80,7 @@ export default function Contact() {
               Ready to collaborate on your next project? Let's discuss how we can work together.
             </p>
           </div>
-          
+
           <div className="bg-gray-800 bg-opacity-50 glass-effect rounded-2xl p-8 shadow-2xl">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -101,7 +101,7 @@ export default function Contact() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="email"
@@ -120,7 +120,7 @@ export default function Contact() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="message"
@@ -139,7 +139,7 @@ export default function Contact() {
                     </FormItem>
                   )}
                 />
-                
+
                 <Button
                   type="submit"
                   disabled={isSubmitting}
@@ -150,7 +150,7 @@ export default function Contact() {
                 </Button>
               </form>
             </Form>
-            
+
             {/* Success Message */}
             {showSuccess && (
               <div className="mt-6 p-4 bg-green-500 bg-opacity-20 border border-green-500 rounded-lg">
@@ -160,7 +160,7 @@ export default function Contact() {
                 </div>
               </div>
             )}
-            
+
             {/* Error Message */}
             {showError && (
               <div className="mt-6 p-4 bg-red-500 bg-opacity-20 border border-red-500 rounded-lg">

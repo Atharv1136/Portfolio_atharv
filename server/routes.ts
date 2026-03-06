@@ -13,39 +13,13 @@ dotenv.config();
 // Choose storage based on environment variable
 const STORAGE_TYPE = process.env.STORAGE_TYPE || 'simple';
 
-// Lazy load storage to avoid top-level await issues in serverless
-let storageCache: any = null;
-
-async function getStorage() {
-  if (storageCache) {
-    return storageCache;
-  }
-
-  try {
-    console.log(`\n📦 routes.ts: Loading storage module`);
-    console.log(`   STORAGE_TYPE from env: ${process.env.STORAGE_TYPE || 'undefined'}`);
-    console.log(`   Using STORAGE_TYPE: ${STORAGE_TYPE}`);
-
-    const storageModule = STORAGE_TYPE === 'mongodb'
-      ? await import("./storage.mongodb")
-      : await import("./storage.simple");
-    storageCache = storageModule.storage;
-
-    console.log(`✅ routes.ts: Storage module loaded (type: ${STORAGE_TYPE})`);
-    console.log(`   Storage methods available:`, {
-      getUserByUsername: typeof storageCache.getUserByUsername === 'function',
-      createUser: typeof storageCache.createUser === 'function',
-      getAllProjects: typeof storageCache.getAllProjects === 'function'
-    });
-
-    return storageCache;
-  } catch (error: any) {
-    console.error('❌ Error loading storage module:', error);
-    throw error;
-  }
+// Lazy load storage — no caching to avoid stale module references after hot-reload
+async function getStorage(): Promise<any> {
+  const storageModule = STORAGE_TYPE === 'mongodb'
+    ? await import("./storage.mongodb")
+    : await import("./storage.simple");
+  return storageModule.storage as any;
 }
-
-// Remove the Proxy - we'll use getStorage() directly everywhere
 
 // Helper function to normalize data from both storage types
 function normalizeItem(item: any) {
@@ -663,6 +637,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     const imageUrl = `/uploads/${req.file.filename}`;
     res.json({ imageUrl });
+  });
+
+  // ── Experience Routes ──────────────────────────────────────────────────────
+
+  // Public: get all experiences
+  app.get("/api/experiences", async (req: Request, res: Response) => {
+    try {
+      const storageInstance = await getStorage();
+      const experiences = await storageInstance.getAllExperiences();
+      res.json(experiences.map((exp: any) => {
+        if ('toObject' in exp) {
+          return { ...exp.toObject(), id: exp._id.toString() };
+        }
+        return exp;
+      }));
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin: create experience
+  app.post("/api/admin/experiences", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { company, role, description, duration, logoUrl, displayOrder } = req.body;
+      if (!company || !role || !description || !duration) {
+        return res.status(400).json({ message: "company, role, description and duration are required" });
+      }
+      const storageInstance = await getStorage();
+      const exp = await storageInstance.createExperience({
+        company,
+        role,
+        description,
+        duration,
+        logoUrl: logoUrl || '',
+        displayOrder: parseInt(displayOrder) || 0,
+      });
+      res.json(normalizeItem(exp));
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Admin: update experience
+  app.put("/api/admin/experiences/:id", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { company, role, description, duration, logoUrl, displayOrder } = req.body;
+      const storageInstance = await getStorage();
+      const exp = await storageInstance.updateExperience(req.params.id, {
+        company,
+        role,
+        description,
+        duration,
+        logoUrl: logoUrl || '',
+        displayOrder: parseInt(displayOrder) || 0,
+      });
+      if (!exp) return res.status(404).json({ message: "Experience not found" });
+      res.json(normalizeItem(exp));
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Admin: delete experience
+  app.delete("/api/admin/experiences/:id", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const storageInstance = await getStorage();
+      const success = await storageInstance.deleteExperience(req.params.id);
+      if (!success) return res.status(404).json({ message: "Experience not found" });
+      res.json({ message: "Experience deleted" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
   });
 
   // Create admin user (one-time setup, should be protected in production)

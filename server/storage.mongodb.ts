@@ -23,6 +23,10 @@ import {
   Blog,
   type IBlog,
 } from './models/blog.model';
+import {
+  Experience,
+  type IExperience,
+} from './models/experience.model';
 
 export interface IStorage {
   // User methods
@@ -69,6 +73,13 @@ export interface IStorage {
   createBlog(blog: Partial<IBlog>): Promise<IBlog>;
   updateBlog(id: string, blog: Partial<IBlog>): Promise<IBlog | null>;
   deleteBlog(id: string): Promise<boolean>;
+
+  // Experience methods
+  getAllExperiences(): Promise<IExperience[]>;
+  getExperience(id: string): Promise<IExperience | null>;
+  createExperience(data: Partial<IExperience>): Promise<IExperience>;
+  updateExperience(id: string, data: Partial<IExperience>): Promise<IExperience | null>;
+  deleteExperience(id: string): Promise<boolean>;
 }
 
 export class MongoDBStorage implements IStorage {
@@ -248,6 +259,33 @@ export class MongoDBStorage implements IStorage {
 
   async deleteBlog(id: string): Promise<boolean> {
     const result = await Blog.findByIdAndDelete(id);
+    return result !== null;
+  }
+
+  // Experience methods
+  async getAllExperiences(): Promise<IExperience[]> {
+    return await Experience.find().sort({ displayOrder: 1 });
+  }
+
+  async getExperience(id: string): Promise<IExperience | null> {
+    return await Experience.findById(id);
+  }
+
+  async createExperience(data: Partial<IExperience>): Promise<IExperience> {
+    const exp = new Experience(data);
+    return await exp.save();
+  }
+
+  async updateExperience(id: string, data: Partial<IExperience>): Promise<IExperience | null> {
+    return await Experience.findByIdAndUpdate(
+      id,
+      { ...data, updatedAt: new Date() },
+      { new: true }
+    );
+  }
+
+  async deleteExperience(id: string): Promise<boolean> {
+    const result = await Experience.findByIdAndDelete(id);
     return result !== null;
   }
 }

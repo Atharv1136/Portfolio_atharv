@@ -52,10 +52,24 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
     enabled: open && activeTab === 'blog',
   });
 
+  const { data: experiences, refetch: refetchExperiences } = useQuery<any[]>({
+    queryKey: ['/api/experiences'],
+    enabled: open && activeTab === 'experience',
+  });
+
   // Edit states
   const [editingCert, setEditingCert] = useState<any | null>(null);
   const [editingHackathon, setEditingHackathon] = useState<any | null>(null);
   const [editingProject, setEditingProject] = useState<any | null>(null);
+  const [editingExperience, setEditingExperience] = useState<any | null>(null);
+  const [expForm, setExpForm] = useState({
+    company: '',
+    role: '',
+    description: '',
+    duration: '',
+    logoUrl: '',
+    displayOrder: 0,
+  });
 
   // About form state
   const [aboutForm, setAboutForm] = useState({
@@ -239,6 +253,55 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
     },
   });
 
+  // Experience mutations
+  const addExpMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest('POST', '/api/admin/experiences', data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/experiences'] });
+      refetchExperiences();
+      setExpForm({ company: '', role: '', description: '', duration: '', logoUrl: '', displayOrder: 0 });
+      setEditingExperience(null);
+      alert('Experience added!');
+    },
+  });
+
+  const updateExpMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await apiRequest('PUT', `/api/admin/experiences/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/experiences'] });
+      refetchExperiences();
+      setExpForm({ company: '', role: '', description: '', duration: '', logoUrl: '', displayOrder: 0 });
+      setEditingExperience(null);
+      alert('Experience updated!');
+    },
+  });
+
+  const deleteExpMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest('DELETE', `/api/admin/experiences/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/experiences'] });
+      refetchExperiences();
+      alert('Experience deleted!');
+    },
+  });
+
+  const handleExpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingExperience) {
+      updateExpMutation.mutate({ id: editingExperience.id, data: expForm });
+    } else {
+      addExpMutation.mutate(expForm);
+    }
+  };
+
   const handleAboutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     saveAboutMutation.mutate(aboutForm);
@@ -344,6 +407,7 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
             <TabsTrigger value="certifications" className="data-[state=active]:bg-blue-500">Certifications</TabsTrigger>
             <TabsTrigger value="projects" className="data-[state=active]:bg-blue-500">Projects</TabsTrigger>
             <TabsTrigger value="hackathons" className="data-[state=active]:bg-blue-500">Hackathons</TabsTrigger>
+            <TabsTrigger value="experience" className="data-[state=active]:bg-blue-500">Experience</TabsTrigger>
             <TabsTrigger value="blog" className="data-[state=active]:bg-blue-500">Blog</TabsTrigger>
           </TabsList>
 
@@ -975,6 +1039,170 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
               )}
             </div>
           </TabsContent>
+
+          {/* Experience Tab */}
+          <TabsContent value="experience" className="space-y-4 mt-4">
+            {/* Add / Edit Form */}
+            <form onSubmit={handleExpSubmit} className="space-y-4 p-4 bg-gray-800 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4">
+                {editingExperience ? 'Edit Experience Entry' : 'Add New Experience'}
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="exp-company">Company Name *</Label>
+                  <Input
+                    id="exp-company"
+                    value={expForm.company}
+                    onChange={(e) => setExpForm({ ...expForm, company: e.target.value })}
+                    className="bg-gray-900 border-gray-700 text-white"
+                    placeholder="e.g., Google"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="exp-role">Role / Title *</Label>
+                  <Input
+                    id="exp-role"
+                    value={expForm.role}
+                    onChange={(e) => setExpForm({ ...expForm, role: e.target.value })}
+                    className="bg-gray-900 border-gray-700 text-white"
+                    placeholder="e.g., Software Engineer Intern"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="exp-duration">Duration *</Label>
+                  <Input
+                    id="exp-duration"
+                    value={expForm.duration}
+                    onChange={(e) => setExpForm({ ...expForm, duration: e.target.value })}
+                    className="bg-gray-900 border-gray-700 text-white"
+                    placeholder="e.g., Jun 2024 – Aug 2024"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="exp-logo">Logo URL (optional)</Label>
+                  <Input
+                    id="exp-logo"
+                    value={expForm.logoUrl}
+                    onChange={(e) => setExpForm({ ...expForm, logoUrl: e.target.value })}
+                    className="bg-gray-900 border-gray-700 text-white"
+                    placeholder="https://example.com/logo.png"
+                    type="url"
+                  />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="exp-description">Description *</Label>
+                  <Textarea
+                    id="exp-description"
+                    value={expForm.description}
+                    onChange={(e) => setExpForm({ ...expForm, description: e.target.value })}
+                    className="bg-gray-900 border-gray-700 text-white min-h-[80px]"
+                    placeholder="What did you do / achieve in this role?"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="exp-order">Display Order</Label>
+                  <Input
+                    id="exp-order"
+                    type="number"
+                    value={expForm.displayOrder}
+                    onChange={(e) => setExpForm({ ...expForm, displayOrder: parseInt(e.target.value) || 0 })}
+                    className="bg-gray-900 border-gray-700 text-white"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  type="submit"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600"
+                  disabled={addExpMutation.isPending || updateExpMutation.isPending}
+                >
+                  {(addExpMutation.isPending || updateExpMutation.isPending)
+                    ? 'Saving...'
+                    : editingExperience ? 'Update Experience' : 'Add Experience'}
+                </Button>
+                {editingExperience && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="bg-gray-700 border-gray-600 text-white"
+                    onClick={() => {
+                      setEditingExperience(null);
+                      setExpForm({ company: '', role: '', description: '', duration: '', logoUrl: '', displayOrder: 0 });
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            </form>
+
+            {/* List */}
+            <div className="space-y-4 mt-6">
+              <h3 className="text-lg font-semibold">Current Experiences ({experiences?.length || 0})</h3>
+              {experiences && experiences.length > 0 ? (
+                <div className="space-y-3">
+                  {experiences.map((exp: any) => (
+                    <div
+                      key={exp.id}
+                      className="p-4 bg-gray-800 rounded-lg border border-gray-700"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-lg">{exp.role}</h4>
+                          <p className="text-blue-400 text-sm">{exp.company}</p>
+                          <p className="text-gray-400 text-xs mt-1">{exp.duration}</p>
+                          <p className="text-gray-300 text-sm mt-2 line-clamp-2">{exp.description}</p>
+                          {exp.logoUrl && (
+                            <a href={exp.logoUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 text-xs mt-1 hover:underline block">
+                              Logo URL
+                            </a>
+                          )}
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingExperience(exp);
+                              setExpForm({
+                                company: exp.company,
+                                role: exp.role,
+                                description: exp.description,
+                                duration: exp.duration,
+                                logoUrl: exp.logoUrl || '',
+                                displayOrder: exp.displayOrder || 0,
+                              });
+                            }}
+                            className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              if (confirm('Delete this experience entry?')) {
+                                deleteExpMutation.mutate(exp.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm">No experience entries added yet.</p>
+              )}
+            </div>
+          </TabsContent>
+
           {/* Blog Tab */}
           <TabsContent value="blog" className="space-y-4 mt-4">
             <div className="flex justify-between items-center bg-gray-800 p-4 rounded-lg">
