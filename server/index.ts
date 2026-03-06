@@ -175,7 +175,7 @@ app.use((req, res, next) => {
 
   // Use PORT from environment variables (for Digital Ocean, Heroku, etc.)
   // or default to 5000 for local development
-  const port = parseInt(process.env.PORT || "5000", 10);
+  const port = parseInt(process.env.PORT || "8080", 10);
   const host = "0.0.0.0"; // Listen on all interfaces
 
   server.listen(port, host, () => {
