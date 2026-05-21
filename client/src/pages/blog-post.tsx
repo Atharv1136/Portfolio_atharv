@@ -47,7 +47,7 @@ export default function BlogPost() {
     return (
         <div className="min-h-screen bg-black text-white">
             <Helmet>
-                <title>{blog.seoTitle || blog.title} | Atharv's Portfolio</title>
+                <title>{blog.seoTitle || blog.title} | Atharv Bhosale</title>
                 <meta name="description" content={blog.seoDescription || blog.excerpt} />
                 {blog.seoKeywords?.length > 0 && (
                     <meta name="keywords" content={blog.seoKeywords.join(", ")} />
@@ -56,7 +56,8 @@ export default function BlogPost() {
                 <meta property="og:description" content={blog.seoDescription || blog.excerpt} />
                 <meta property="og:image" content={blog.coverImage} />
                 <meta property="og:type" content="article" />
-                <link rel="canonical" href={`https://atharv.dev/blog/${blog.slug}`} />
+                <meta property="og:url" content={`https://atharvbhosale.site/blog/${blog.slug}`} />
+                <link rel="canonical" href={`https://atharvbhosale.site/blog/${blog.slug}`} />
             </Helmet>
 
             <Navbar />

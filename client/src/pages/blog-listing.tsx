@@ -18,8 +18,12 @@ export default function BlogListing() {
     return (
         <div className="min-h-screen bg-black text-white">
             <Helmet>
-                <title>Blog | Atharv's Portfolio</title>
-                <meta name="description" content="Read my latest thoughts, tutorials, and insights on web development and technology." />
+                <title>Blog | Atharv Bhosale — Software Developer</title>
+                <meta name="description" content="Read Atharv Bhosale's latest thoughts, tutorials, and insights on web development, AI, and technology." />
+                <link rel="canonical" href="https://atharvbhosale.site/blog" />
+                <meta property="og:title" content="Blog | Atharv Bhosale" />
+                <meta property="og:description" content="Read Atharv Bhosale's latest thoughts, tutorials, and insights on web development, AI, and technology." />
+                <meta property="og:url" content="https://atharvbhosale.site/blog" />
             </Helmet>
 
             <Navbar />
