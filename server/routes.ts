@@ -74,6 +74,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize storage first (cache it for subsequent requests)
   await getStorage();
 
+  // Dynamic sitemap.xml — auto-includes all published blog posts
+  app.get("/sitemap.xml", async (req: Request, res: Response) => {
+    try {
+      const storageInstance = await getStorage();
+      const blogs = await storageInstance.getAllBlogs(true); // only published
+
+      const BASE_URL = 'https://atharvbhosale.site';
+      const today = new Date().toISOString().split('T')[0];
+
+      const staticPages = [
+        { loc: '/', changefreq: 'monthly', priority: '1.0' },
+        { loc: '/#about', changefreq: 'monthly', priority: '0.9' },
+        { loc: '/#experience', changefreq: 'monthly', priority: '0.9' },
+        { loc: '/#projects', changefreq: 'weekly', priority: '0.95' },
+        { loc: '/#certifications', changefreq: 'monthly', priority: '0.8' },
+        { loc: '/#hackathons', changefreq: 'monthly', priority: '0.8' },
+        { loc: '/#contact', changefreq: 'monthly', priority: '0.9' },
+        { loc: '/blog', changefreq: 'weekly', priority: '0.8' },
+      ];
+
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
+
+      for (const page of staticPages) {
+        xml += `\n  <url>\n    <loc>${BASE_URL}${page.loc}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${page.changefreq}</changefreq>\n    <priority>${page.priority}</priority>\n  </url>`;
+      }
+
+      for (const blog of blogs) {
+        const raw = blog && typeof (blog as any).toObject === 'function' ? (blog as any).toObject() : blog;
+        const slug = raw.slug;
+        const lastmod = raw.publishedAt
+          ? new Date(raw.publishedAt).toISOString().split('T')[0]
+          : raw.updatedAt
+          ? new Date(raw.updatedAt).toISOString().split('T')[0]
+          : today;
+
+        xml += `\n  <url>\n    <loc>${BASE_URL}/blog/${slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>`;
+      }
+
+      xml += `\n</urlset>`;
+
+      res.setHeader('Content-Type', 'application/xml');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.status(200).send(xml);
+    } catch (error: any) {
+      console.error('❌ Error generating sitemap:', error);
+      res.status(500).send('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>');
+    }
+  });
+
   // Health check
   app.get("/api/health", (req: Request, res: Response) => {
     res.json({ status: "ok" });
