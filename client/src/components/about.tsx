@@ -31,6 +31,9 @@ export default function About() {
 
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
+              <p className="text-lg text-gray-300 leading-relaxed mb-4">
+                Atharv Bhosale is a software developer based in Pune, India, passionate about building AI-powered applications, React frontends, and scalable full-stack systems. Atharv specializes in turning ideas into fast, accessible, and modern web products.
+              </p>
               <p className="text-lg text-gray-300 leading-relaxed mb-8">
                 {about.bio}
               </p>

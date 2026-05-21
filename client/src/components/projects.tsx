@@ -51,7 +51,7 @@ export default function Projects() {
                   {project.imageUrl && (
                     <img
                       src={project.imageUrl}
-                      alt={project.alt || project.title}
+                      alt={project.alt || `${project.title} by Atharv Bhosale`}
                       className="w-full h-36 object-cover"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
