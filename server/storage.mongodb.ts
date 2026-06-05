@@ -27,6 +27,10 @@ import {
   Experience,
   type IExperience,
 } from './models/experience.model';
+import {
+  Publication,
+  type IPublication,
+} from './models/publication.model';
 
 export interface IStorage {
   // User methods
@@ -80,6 +84,13 @@ export interface IStorage {
   createExperience(data: Partial<IExperience>): Promise<IExperience>;
   updateExperience(id: string, data: Partial<IExperience>): Promise<IExperience | null>;
   deleteExperience(id: string): Promise<boolean>;
+
+  // Publication methods
+  getAllPublications(): Promise<IPublication[]>;
+  getPublication(id: string): Promise<IPublication | null>;
+  createPublication(data: Partial<IPublication>): Promise<IPublication>;
+  updatePublication(id: string, data: Partial<IPublication>): Promise<IPublication | null>;
+  deletePublication(id: string): Promise<boolean>;
 }
 
 export class MongoDBStorage implements IStorage {
@@ -286,6 +297,33 @@ export class MongoDBStorage implements IStorage {
 
   async deleteExperience(id: string): Promise<boolean> {
     const result = await Experience.findByIdAndDelete(id);
+    return result !== null;
+  }
+
+  // Publication methods
+  async getAllPublications(): Promise<IPublication[]> {
+    return await Publication.find().sort({ displayOrder: 1 });
+  }
+
+  async getPublication(id: string): Promise<IPublication | null> {
+    return await Publication.findById(id);
+  }
+
+  async createPublication(data: Partial<IPublication>): Promise<IPublication> {
+    const pub = new Publication(data);
+    return await pub.save();
+  }
+
+  async updatePublication(id: string, data: Partial<IPublication>): Promise<IPublication | null> {
+    return await Publication.findByIdAndUpdate(
+      id,
+      { ...data, updatedAt: new Date() },
+      { new: true }
+    );
+  }
+
+  async deletePublication(id: string): Promise<boolean> {
+    const result = await Publication.findByIdAndDelete(id);
     return result !== null;
   }
 }

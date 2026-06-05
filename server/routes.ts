@@ -90,6 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { loc: '/#projects', changefreq: 'weekly', priority: '0.95' },
         { loc: '/#certifications', changefreq: 'monthly', priority: '0.8' },
         { loc: '/#hackathons', changefreq: 'monthly', priority: '0.8' },
+        { loc: '/#publications', changefreq: 'monthly', priority: '0.8' },
         { loc: '/#contact', changefreq: 'monthly', priority: '0.9' },
         { loc: '/blog', changefreq: 'weekly', priority: '0.8' },
       ];
@@ -755,6 +756,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const success = await storageInstance.deleteExperience(req.params.id);
       if (!success) return res.status(404).json({ message: "Experience not found" });
       res.json({ message: "Experience deleted" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ── Publication Routes ─────────────────────────────────────────────────────
+
+  // Public: get all publications
+  app.get("/api/publications", async (req: Request, res: Response) => {
+    try {
+      const storageInstance = await getStorage();
+      const publications = await storageInstance.getAllPublications();
+      res.json(publications.map((pub: any) => {
+        if ('toObject' in pub) {
+          return { ...pub.toObject(), id: pub._id.toString() };
+        }
+        return pub;
+      }));
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin: create publication
+  app.post("/api/admin/publications", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { title, publisher, publicationDate, url, description, authors, logoUrl, displayOrder } = req.body;
+      if (!title || !publisher || !publicationDate || !description || !authors) {
+        return res.status(400).json({ message: "title, publisher, publicationDate, description and authors are required" });
+      }
+      const storageInstance = await getStorage();
+      const pub = await storageInstance.createPublication({
+        title,
+        publisher,
+        publicationDate,
+        url: url || '',
+        description,
+        authors,
+        logoUrl: logoUrl || '',
+        displayOrder: parseInt(displayOrder) || 0,
+      });
+      res.json(normalizeItem(pub));
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Admin: update publication
+  app.put("/api/admin/publications/:id", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { title, publisher, publicationDate, url, description, authors, logoUrl, displayOrder } = req.body;
+      const storageInstance = await getStorage();
+      const pub = await storageInstance.updatePublication(req.params.id, {
+        title,
+        publisher,
+        publicationDate,
+        url: url || '',
+        description,
+        authors,
+        logoUrl: logoUrl || '',
+        displayOrder: parseInt(displayOrder) || 0,
+      });
+      if (!pub) return res.status(404).json({ message: "Publication not found" });
+      res.json(normalizeItem(pub));
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Admin: delete publication
+  app.delete("/api/admin/publications/:id", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const storageInstance = await getStorage();
+      const success = await storageInstance.deletePublication(req.params.id);
+      if (!success) return res.status(404).json({ message: "Publication not found" });
+      res.json({ message: "Publication deleted" });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

@@ -112,6 +112,7 @@ export default function Navbar() {
     { id: 'experience', label: 'Experience' },
     { id: 'projects', label: 'Projects' },
     { id: 'certifications', label: 'Certifications' },
+    { id: 'publications', label: 'Publications' },
     { id: 'blog', label: 'Blog' },
     { id: 'contact', label: 'Contact' }
   ];

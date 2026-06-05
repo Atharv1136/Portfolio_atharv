@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { X, Plus, Trash2, Save, Edit2, Eye, FileText } from 'lucide-react';
+import { X, Plus, Trash2, Save, Edit2, Eye, FileText, BookOpen } from 'lucide-react';
 import { useLocation } from "wouter";
 
 interface AdminDashboardProps {
@@ -57,16 +57,32 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
     enabled: open && activeTab === 'experience',
   });
 
+  const { data: publications, refetch: refetchPublications } = useQuery<any[]>({
+    queryKey: ['/api/publications'],
+    enabled: open && activeTab === 'publications',
+  });
+
   // Edit states
   const [editingCert, setEditingCert] = useState<any | null>(null);
   const [editingHackathon, setEditingHackathon] = useState<any | null>(null);
   const [editingProject, setEditingProject] = useState<any | null>(null);
   const [editingExperience, setEditingExperience] = useState<any | null>(null);
+  const [editingPublication, setEditingPublication] = useState<any | null>(null);
   const [expForm, setExpForm] = useState({
     company: '',
     role: '',
     description: '',
     duration: '',
+    logoUrl: '',
+    displayOrder: 0,
+  });
+  const [pubForm, setPubForm] = useState({
+    title: '',
+    publisher: '',
+    publicationDate: '',
+    url: '',
+    description: '',
+    authors: '',
     logoUrl: '',
     displayOrder: 0,
   });
@@ -302,6 +318,55 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
     }
   };
 
+  // Publication mutations
+  const addPubMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest('POST', '/api/admin/publications', data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/publications'] });
+      refetchPublications();
+      setPubForm({ title: '', publisher: '', publicationDate: '', url: '', description: '', authors: '', logoUrl: '', displayOrder: 0 });
+      setEditingPublication(null);
+      alert('Publication added!');
+    },
+  });
+
+  const updatePubMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await apiRequest('PUT', `/api/admin/publications/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/publications'] });
+      refetchPublications();
+      setPubForm({ title: '', publisher: '', publicationDate: '', url: '', description: '', authors: '', logoUrl: '', displayOrder: 0 });
+      setEditingPublication(null);
+      alert('Publication updated!');
+    },
+  });
+
+  const deletePubMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest('DELETE', `/api/admin/publications/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/publications'] });
+      refetchPublications();
+      alert('Publication deleted!');
+    },
+  });
+
+  const handlePubSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingPublication) {
+      updatePubMutation.mutate({ id: editingPublication.id, data: pubForm });
+    } else {
+      addPubMutation.mutate(pubForm);
+    }
+  };
+
   const handleAboutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     saveAboutMutation.mutate(aboutForm);
@@ -408,6 +473,7 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
             <TabsTrigger value="projects" className="data-[state=active]:bg-blue-500">Projects</TabsTrigger>
             <TabsTrigger value="hackathons" className="data-[state=active]:bg-blue-500">Hackathons</TabsTrigger>
             <TabsTrigger value="experience" className="data-[state=active]:bg-blue-500">Experience</TabsTrigger>
+            <TabsTrigger value="publications" className="data-[state=active]:bg-blue-500">Publications</TabsTrigger>
             <TabsTrigger value="blog" className="data-[state=active]:bg-blue-500">Blog</TabsTrigger>
           </TabsList>
 
@@ -1199,6 +1265,193 @@ export default function AdminDashboard({ open, onOpenChange, onLogout }: AdminDa
                 </div>
               ) : (
                 <p className="text-gray-400 text-sm">No experience entries added yet.</p>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Publications Tab */}
+          <TabsContent value="publications" className="space-y-4 mt-4">
+            {/* Add / Edit Form */}
+            <form onSubmit={handlePubSubmit} className="space-y-4 p-4 bg-gray-800 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4">
+                {editingPublication ? 'Edit Publication' : 'Add New Publication'}
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="pub-title">Title *</Label>
+                  <Input
+                    id="pub-title"
+                    value={pubForm.title}
+                    onChange={(e) => setPubForm({ ...pubForm, title: e.target.value })}
+                    className="bg-gray-900 border-gray-700 text-white"
+                    placeholder="e.g., A Novel Approach to Machine Learning"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pub-publisher">Publication / Publisher *</Label>
+                  <Input
+                    id="pub-publisher"
+                    value={pubForm.publisher}
+                    onChange={(e) => setPubForm({ ...pubForm, publisher: e.target.value })}
+                    className="bg-gray-900 border-gray-700 text-white"
+                    placeholder="e.g., IEEE, Springer, Elsevier"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pub-date">Publication Date *</Label>
+                  <Input
+                    id="pub-date"
+                    value={pubForm.publicationDate}
+                    onChange={(e) => setPubForm({ ...pubForm, publicationDate: e.target.value })}
+                    className="bg-gray-900 border-gray-700 text-white"
+                    placeholder="e.g., March 2025"
+                    required
+                  />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="pub-authors">Authors *</Label>
+                  <Input
+                    id="pub-authors"
+                    value={pubForm.authors}
+                    onChange={(e) => setPubForm({ ...pubForm, authors: e.target.value })}
+                    className="bg-gray-900 border-gray-700 text-white"
+                    placeholder="e.g., Atharv Bhosale, John Doe, Jane Smith"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pub-url">Paper URL (optional)</Label>
+                  <Input
+                    id="pub-url"
+                    value={pubForm.url}
+                    onChange={(e) => setPubForm({ ...pubForm, url: e.target.value })}
+                    className="bg-gray-900 border-gray-700 text-white"
+                    placeholder="https://doi.org/10.1234/..."
+                    type="url"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pub-logo">Publisher Logo URL (optional)</Label>
+                  <Input
+                    id="pub-logo"
+                    value={pubForm.logoUrl}
+                    onChange={(e) => setPubForm({ ...pubForm, logoUrl: e.target.value })}
+                    className="bg-gray-900 border-gray-700 text-white"
+                    placeholder="https://example.com/logo.png"
+                    type="url"
+                  />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="pub-description">Description *</Label>
+                  <Textarea
+                    id="pub-description"
+                    value={pubForm.description}
+                    onChange={(e) => setPubForm({ ...pubForm, description: e.target.value })}
+                    className="bg-gray-900 border-gray-700 text-white min-h-[80px]"
+                    placeholder="Brief summary of the research paper..."
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pub-order">Display Order</Label>
+                  <Input
+                    id="pub-order"
+                    type="number"
+                    value={pubForm.displayOrder}
+                    onChange={(e) => setPubForm({ ...pubForm, displayOrder: parseInt(e.target.value) || 0 })}
+                    className="bg-gray-900 border-gray-700 text-white"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  type="submit"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600"
+                  disabled={addPubMutation.isPending || updatePubMutation.isPending}
+                >
+                  {(addPubMutation.isPending || updatePubMutation.isPending)
+                    ? 'Saving...'
+                    : editingPublication ? 'Update Publication' : 'Add Publication'}
+                </Button>
+                {editingPublication && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="bg-gray-700 border-gray-600 text-white"
+                    onClick={() => {
+                      setEditingPublication(null);
+                      setPubForm({ title: '', publisher: '', publicationDate: '', url: '', description: '', authors: '', logoUrl: '', displayOrder: 0 });
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            </form>
+
+            {/* List */}
+            <div className="space-y-4 mt-6">
+              <h3 className="text-lg font-semibold">Current Publications ({publications?.length || 0})</h3>
+              {publications && publications.length > 0 ? (
+                <div className="space-y-3">
+                  {publications.map((pub: any) => (
+                    <div
+                      key={pub.id}
+                      className="p-4 bg-gray-800 rounded-lg border border-gray-700"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-lg">{pub.title}</h4>
+                          <p className="text-blue-400 text-sm">{pub.publisher}</p>
+                          <p className="text-gray-400 text-xs mt-1">{pub.publicationDate} • {pub.authors}</p>
+                          <p className="text-gray-300 text-sm mt-2 line-clamp-2">{pub.description}</p>
+                          {pub.url && (
+                            <a href={pub.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 text-xs mt-1 hover:underline block">
+                              View Paper
+                            </a>
+                          )}
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingPublication(pub);
+                              setPubForm({
+                                title: pub.title,
+                                publisher: pub.publisher,
+                                publicationDate: pub.publicationDate,
+                                url: pub.url || '',
+                                description: pub.description,
+                                authors: pub.authors,
+                                logoUrl: pub.logoUrl || '',
+                                displayOrder: pub.displayOrder || 0,
+                              });
+                            }}
+                            className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              if (confirm('Delete this publication?')) {
+                                deletePubMutation.mutate(pub.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm">No publications added yet.</p>
               )}
             </div>
           </TabsContent>

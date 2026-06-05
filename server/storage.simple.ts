@@ -75,6 +75,20 @@ interface Experience {
   updatedAt: Date;
 }
 
+interface Publication {
+  id: string;
+  title: string;
+  publisher: string;
+  publicationDate: string;
+  url?: string;
+  description: string;
+  authors: string;
+  logoUrl?: string;
+  displayOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface IStorage {
   getUser(id: string): Promise<User | null>;
   getUserByUsername(username: string): Promise<User | null>;
@@ -112,6 +126,12 @@ export interface IStorage {
   createExperience(data: Partial<Experience>): Promise<Experience>;
   updateExperience(id: string, data: Partial<Experience>): Promise<Experience | null>;
   deleteExperience(id: string): Promise<boolean>;
+
+  getAllPublications(): Promise<Publication[]>;
+  getPublication(id: string): Promise<Publication | null>;
+  createPublication(data: Partial<Publication>): Promise<Publication>;
+  updatePublication(id: string, data: Partial<Publication>): Promise<Publication | null>;
+  deletePublication(id: string): Promise<boolean>;
 }
 
 export class SimpleStorage implements IStorage {
@@ -121,11 +141,13 @@ export class SimpleStorage implements IStorage {
   private hackathons: Map<string, Hackathon> = new Map();
   private projects: Map<string, Project> = new Map();
   private experiences: Map<string, Experience> = new Map();
+  private publications: Map<string, Publication> = new Map();
   private userIdCounter = 1;
   private certIdCounter = 1;
   private hackIdCounter = 1;
   private projectIdCounter = 1;
   private experienceIdCounter = 1;
+  private publicationIdCounter = 1;
 
   // User methods
   async getUser(id: string): Promise<User | null> {
@@ -332,6 +354,47 @@ export class SimpleStorage implements IStorage {
 
   async deleteExperience(id: string): Promise<boolean> {
     return this.experiences.delete(id);
+  }
+
+  // Publication methods
+  async getAllPublications(): Promise<Publication[]> {
+    return Array.from(this.publications.values())
+      .sort((a, b) => a.displayOrder - b.displayOrder);
+  }
+
+  async getPublication(id: string): Promise<Publication | null> {
+    return this.publications.get(id) || null;
+  }
+
+  async createPublication(data: Partial<Publication>): Promise<Publication> {
+    const id = String(this.publicationIdCounter++);
+    const newPub: Publication = {
+      id,
+      title: data.title || '',
+      publisher: data.publisher || '',
+      publicationDate: data.publicationDate || '',
+      url: data.url,
+      description: data.description || '',
+      authors: data.authors || '',
+      logoUrl: data.logoUrl,
+      displayOrder: data.displayOrder || 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.publications.set(id, newPub);
+    return newPub;
+  }
+
+  async updatePublication(id: string, data: Partial<Publication>): Promise<Publication | null> {
+    const existing = this.publications.get(id);
+    if (!existing) return null;
+    const updated = { ...existing, ...data, updatedAt: new Date() };
+    this.publications.set(id, updated);
+    return updated;
+  }
+
+  async deletePublication(id: string): Promise<boolean> {
+    return this.publications.delete(id);
   }
 }
 
