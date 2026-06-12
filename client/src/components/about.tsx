@@ -62,9 +62,9 @@ export default function About() {
             <div className="space-y-8">
               {/* Technical Skills */}
               <div>
-                <h3 className="text-2xl font-semibold mb-4 text-blue-400">
-                  <i className="fas fa-code mr-2"></i>Technical Skills
-                </h3>
+                <h2 className="text-2xl font-semibold mb-4 text-blue-400">
+                  <i className="fas fa-code mr-2"></i>Skills
+                </h2>
                 <div className="flex flex-wrap gap-2">
                   {skills.map((skill: string) => (
                     <span

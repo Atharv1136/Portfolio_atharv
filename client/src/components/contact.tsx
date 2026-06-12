@@ -74,7 +74,7 @@ export default function Contact() {
       <div className="max-w-4xl mx-auto px-6 sm:px-8">
         <div className="section-reveal">
           <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">Let's Connect</h2>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6">Contact</h2>
             <div className="w-24 h-1 bg-blue-500 mx-auto mb-4"></div>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               Ready to collaborate on your next project? Let's discuss how we can work together.

@@ -73,7 +73,7 @@ function HeroContent({ resumeUrl, onContactClick }: HeroContentProps) {
 
             <div className="w-full lg:w-1/2 pr-0 lg:pr-8 mb-8 lg:mb-0">
                 <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 leading-tight tracking-wide">
-                    Atharv Bhosale<span className="block text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium mt-2 opacity-80">— Software Developer from Pune</span>
+                    Atharv Bhosale<span className="block text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium mt-2 opacity-80">— Software Developer</span>
                 </h1>
                 <div className="text-sm text-gray-300 opacity-90 mt-4 tracking-widest uppercase">
                     Software Developer \ Problem Solver \ Tech Enthusiast
