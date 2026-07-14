@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "atharv",
+  "main": "server/cloudflare-worker.ts",
   "compatibility_date": "2026-07-14",
   "observability": {
     "enabled": true
