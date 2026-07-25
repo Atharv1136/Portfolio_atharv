@@ -80,30 +80,16 @@ app.get("/", (_req: Request, res: Response) => {
   });
 });
 
-let initPromise: Promise<void> | null = null;
+// Register routes directly onto Express app
+registerRoutes(app).catch(err => {
+  console.error("❌ Error registering routes:", err);
+});
 
-async function initServerless() {
-  if (!initPromise) {
-    initPromise = (async () => {
-      if (STORAGE_TYPE === 'mongodb' && process.env.MONGODB_URI) {
-        try {
-          await connectToDatabase();
-        } catch (error: any) {
-          console.warn('⚠️ Could not connect to MongoDB:', error.message);
-        }
-      }
-      await registerRoutes(app);
-      app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-        const status = err.status || err.statusCode || 500;
-        const message = err.message || "Internal Server Error";
-        res.status(status).json({ message });
-      });
-    })();
-  }
-  return initPromise;
+// Connect to MongoDB asynchronously if enabled
+if (STORAGE_TYPE === 'mongodb' && process.env.MONGODB_URI) {
+  connectToDatabase().catch(err => {
+    console.warn("⚠️ MongoDB async connection warning:", err.message);
+  });
 }
 
-export default async function handler(req: Request, res: Response) {
-  await initServerless();
-  app(req, res);
-}
+export default app;

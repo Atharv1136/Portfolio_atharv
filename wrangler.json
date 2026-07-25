@@ -3,6 +3,9 @@
   "name": "atharv",
   "main": "server/cloudflare-worker.ts",
   "compatibility_date": "2026-07-14",
+  "vars": {
+    "BACKEND_URL": "https://portfolio-atharv-72k8-eight.vercel.app"
+  },
   "observability": {
     "enabled": true
   },
