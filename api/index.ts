@@ -80,16 +80,33 @@ app.get("/", (_req: Request, res: Response) => {
   });
 });
 
-// Register routes directly onto Express app
-registerRoutes(app).catch(err => {
-  console.error("❌ Error registering routes:", err);
-});
+let isInitialized = false;
+let initPromise: Promise<void> | null = null;
 
-// Connect to MongoDB asynchronously if enabled
-if (STORAGE_TYPE === 'mongodb' && process.env.MONGODB_URI) {
-  connectToDatabase().catch(err => {
-    console.warn("⚠️ MongoDB async connection warning:", err.message);
-  });
+async function ensureInitialized() {
+  if (isInitialized) return;
+  if (!initPromise) {
+    initPromise = (async () => {
+      if (STORAGE_TYPE === 'mongodb' && process.env.MONGODB_URI) {
+        try {
+          await connectToDatabase();
+        } catch (error: any) {
+          console.warn('⚠️ Could not connect to MongoDB:', error.message);
+        }
+      }
+      await registerRoutes(app);
+      isInitialized = true;
+    })();
+  }
+  return initPromise;
 }
 
-export default app;
+export default async function handler(req: Request, res: Response) {
+  try {
+    await ensureInitialized();
+    app(req, res);
+  } catch (err: any) {
+    console.error("❌ Vercel function handler error:", err);
+    res.status(500).json({ message: err.message || "Internal Server Error" });
+  }
+}
