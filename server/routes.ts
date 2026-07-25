@@ -12,11 +12,21 @@ dotenv.config();
 
 import { storage as mongodbStorage } from "./storage.mongodb";
 import { storage as simpleStorage } from "./storage.simple";
+import { connectToDatabase } from "./mongodb";
 
-// Synchronous storage selector — statically bundled for Vercel serverless environment
-function getStorage(): any {
+// Resilient storage selector — falls back to simpleStorage if MongoDB connection fails
+async function getStorage(): Promise<any> {
   const storageType = process.env.STORAGE_TYPE || (process.env.MONGODB_URI ? 'mongodb' : 'simple');
-  return storageType === 'mongodb' ? mongodbStorage : simpleStorage;
+  if (storageType === 'mongodb' && process.env.MONGODB_URI) {
+    try {
+      await connectToDatabase();
+      return mongodbStorage;
+    } catch (err: any) {
+      console.warn("⚠️ MongoDB connection unavailable, using fallback storage:", err.message);
+      return simpleStorage;
+    }
+  }
+  return simpleStorage;
 }
 
 // Helper function to normalize data from both storage types
@@ -217,13 +227,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!about) {
         return res.json(null);
       }
-      // Handle both MongoDB (has _id) and simple storage (has id)
       const aboutData = 'toObject' in about
         ? { ...about.toObject(), id: about._id.toString() }
         : { ...about };
       res.json(aboutData);
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("❌ Error fetching about data:", error.message);
+      res.json(null);
     }
   });
 
@@ -231,14 +241,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const storageInstance = await getStorage();
       const certs = await storageInstance.getAllCertifications();
-      res.json(certs.map((cert: any) => {
-        if ('toObject' in cert) {
+      res.json((certs || []).map((cert: any) => {
+        if (cert && 'toObject' in cert) {
           return { ...cert.toObject(), id: cert._id.toString() };
         }
         return cert;
       }));
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("❌ Error fetching certifications:", error.message);
+      res.json([]);
     }
   });
 
@@ -246,14 +257,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const storageInstance = await getStorage();
       const hackathons = await storageInstance.getAllHackathons();
-      res.json(hackathons.map((hack: any) => {
-        if ('toObject' in hack) {
+      res.json((hackathons || []).map((hack: any) => {
+        if (hack && 'toObject' in hack) {
           return { ...hack.toObject(), id: hack._id.toString() };
         }
         return hack;
       }));
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("❌ Error fetching hackathons:", error.message);
+      res.json([]);
     }
   });
 
@@ -261,14 +273,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const storageInstance = await getStorage();
       const projects = await storageInstance.getAllProjects();
-      res.json(projects.map((project: any) => {
-        if ('toObject' in project) {
+      res.json((projects || []).map((project: any) => {
+        if (project && 'toObject' in project) {
           return { ...project.toObject(), id: project._id.toString() };
         }
         return project;
       }));
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("❌ Error fetching projects:", error.message);
+      res.json([]);
     }
   });
 
@@ -550,9 +563,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const storageInstance = await getStorage();
       const blogs = await storageInstance.getAllBlogs(true); // onlyPublished = true
-      res.json(blogs.map(normalizeItem));
+      res.json((blogs || []).map(normalizeItem));
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("❌ Error fetching blogs:", error.message);
+      res.json([]);
     }
   });
 
@@ -705,14 +719,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const storageInstance = await getStorage();
       const experiences = await storageInstance.getAllExperiences();
-      res.json(experiences.map((exp: any) => {
-        if ('toObject' in exp) {
+      res.json((experiences || []).map((exp: any) => {
+        if (exp && 'toObject' in exp) {
           return { ...exp.toObject(), id: exp._id.toString() };
         }
         return exp;
       }));
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("❌ Error fetching experiences:", error.message);
+      res.json([]);
     }
   });
 
@@ -777,14 +792,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const storageInstance = await getStorage();
       const publications = await storageInstance.getAllPublications();
-      res.json(publications.map((pub: any) => {
-        if ('toObject' in pub) {
+      res.json((publications || []).map((pub: any) => {
+        if (pub && 'toObject' in pub) {
           return { ...pub.toObject(), id: pub._id.toString() };
         }
         return pub;
       }));
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("❌ Error fetching publications:", error.message);
+      res.json([]);
     }
   });
 
