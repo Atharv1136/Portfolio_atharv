@@ -15,7 +15,7 @@ if (!MONGODB_URI) {
 async function createAdminUser() {
   try {
     console.log('🔄 Connecting to MongoDB...');
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(MONGODB_URI!);
     console.log('✅ Connected to MongoDB\n');
 
     const username = 'admin';

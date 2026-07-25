@@ -18,7 +18,7 @@ export default function BlogEditor({ params }: { params?: { id?: string } }) {
     const isEditing = !!id;
     const [location, setLocation] = useLocation();
     const { toast } = useToast();
-    const quillRef = useRef<ReactQuill>(null);
+    const quillRef = useRef<any>(null);
 
     const { data: blog, isLoading } = useQuery({
         queryKey: isEditing ? ["blog", id] : [],
@@ -169,7 +169,7 @@ export default function BlogEditor({ params }: { params?: { id?: string } }) {
                         ref={quillRef}
                         theme="snow"
                         value={form.watch("content")}
-                        onChange={(val) => form.setValue("content", val)}
+                        onChange={(val: string) => form.setValue("content", val)}
                         modules={modules}
                         className="min-h-[300px] mb-12"
                     />
