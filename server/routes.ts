@@ -14,14 +14,9 @@ import { storage as mongodbStorage } from "./storage.mongodb";
 import { storage as simpleStorage } from "./storage.simple";
 import { connectToDatabase } from "./mongodb";
 
-// Resilient storage selector — connects to MongoDB Atlas and returns mongodbStorage
-async function getStorage(): Promise<any> {
+// Storage selector — returns mongodbStorage or simpleStorage synchronously
+function getStorage(): any {
   if (process.env.MONGODB_URI || process.env.STORAGE_TYPE === 'mongodb') {
-    try {
-      await connectToDatabase();
-    } catch (err: any) {
-      console.error("❌ MongoDB connection error in getStorage:", err.message);
-    }
     return mongodbStorage;
   }
   return simpleStorage;
@@ -87,10 +82,7 @@ const upload = multer({
   },
 });
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  // Initialize storage first (cache it for subsequent requests)
-  await getStorage();
-
+export function registerRoutes(app: Express): Server {
   // Dynamic sitemap.xml — auto-includes all published blog posts
   app.get("/sitemap.xml", async (req: Request, res: Response) => {
     try {
@@ -220,7 +212,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Public data routes (no auth required)
   app.get("/api/about", async (req: Request, res: Response) => {
     try {
-      const storageInstance = await getStorage();
+      if (process.env.MONGODB_URI) await connectToDatabase();
+      const storageInstance = getStorage();
       const about = await storageInstance.getAboutData();
       if (!about) {
         return res.json(null);
@@ -237,7 +230,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/certifications", async (req: Request, res: Response) => {
     try {
-      const storageInstance = await getStorage();
+      if (process.env.MONGODB_URI) await connectToDatabase();
+      const storageInstance = getStorage();
       const certs = await storageInstance.getAllCertifications();
       res.json((certs || []).map((cert: any) => {
         if (cert && 'toObject' in cert) {
@@ -253,7 +247,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/hackathons", async (req: Request, res: Response) => {
     try {
-      const storageInstance = await getStorage();
+      if (process.env.MONGODB_URI) await connectToDatabase();
+      const storageInstance = getStorage();
       const hackathons = await storageInstance.getAllHackathons();
       res.json((hackathons || []).map((hack: any) => {
         if (hack && 'toObject' in hack) {
@@ -269,7 +264,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/projects", async (req: Request, res: Response) => {
     try {
-      const storageInstance = await getStorage();
+      if (process.env.MONGODB_URI) await connectToDatabase();
+      const storageInstance = getStorage();
       const projects = await storageInstance.getAllProjects();
       res.json((projects || []).map((project: any) => {
         if (project && 'toObject' in project) {
@@ -559,7 +555,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Public: Get all published blogs
   app.get("/api/blogs", async (req: Request, res: Response) => {
     try {
-      const storageInstance = await getStorage();
+      if (process.env.MONGODB_URI) await connectToDatabase();
+      const storageInstance = getStorage();
       const blogs = await storageInstance.getAllBlogs(true); // onlyPublished = true
       res.json((blogs || []).map(normalizeItem));
     } catch (error: any) {
@@ -715,7 +712,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Public: get all experiences
   app.get("/api/experiences", async (req: Request, res: Response) => {
     try {
-      const storageInstance = await getStorage();
+      if (process.env.MONGODB_URI) await connectToDatabase();
+      const storageInstance = getStorage();
       const experiences = await storageInstance.getAllExperiences();
       res.json((experiences || []).map((exp: any) => {
         if (exp && 'toObject' in exp) {
@@ -788,7 +786,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Public: get all publications
   app.get("/api/publications", async (req: Request, res: Response) => {
     try {
-      const storageInstance = await getStorage();
+      if (process.env.MONGODB_URI) await connectToDatabase();
+      const storageInstance = getStorage();
       const publications = await storageInstance.getAllPublications();
       res.json((publications || []).map((pub: any) => {
         if (pub && 'toObject' in pub) {
