@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "echo 'Backend Serverless API build complete'",
+  "outputDirectory": null,
   "rewrites": [
     {
       "source": "/sitemap.xml",
@@ -14,7 +16,7 @@
       "destination": "/api/index.ts"
     },
     {
-      "source": "/",
+      "source": "/(.*)",
       "destination": "/api/index.ts"
     }
   ]

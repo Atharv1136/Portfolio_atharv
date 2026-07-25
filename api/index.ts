@@ -15,14 +15,6 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Normalize URL for Express routing if Vercel stripped the /api prefix
-app.use((req: Request, _res: Response, next: NextFunction) => {
-  if (!req.url.startsWith("/api") && req.url !== "/" && req.url !== "/sitemap.xml" && !req.url.startsWith("/uploads")) {
-    req.url = `/api${req.url}`;
-  }
-  next();
-});
-
 // Serve uploaded files if any exist in working dir
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
@@ -40,6 +32,28 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+// Normalize URL for Express routing if Vercel stripped the /api prefix
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  if (!req.url.startsWith("/api") && req.url !== "/" && req.url !== "/sitemap.xml" && !req.url.startsWith("/uploads")) {
+    req.url = `/api${req.url}`;
+  }
+  next();
+});
+
+// Session configuration
+const sessionConfig: session.SessionOptions = {
+  secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: 'lax',
+  },
+};
+app.use(session(sessionConfig));
+
 // Root API status endpoint
 app.get("/", (_req: Request, res: Response) => {
   res.json({
@@ -49,53 +63,29 @@ app.get("/", (_req: Request, res: Response) => {
   });
 });
 
-let isInitialized = false;
+let initPromise: Promise<void> | null = null;
 
 async function initServerless() {
-  if (isInitialized) return;
-
-  const STORAGE_TYPE = process.env.STORAGE_TYPE || 'mongodb';
-  let sessionStore: any = undefined;
-
-  if (STORAGE_TYPE === 'mongodb') {
-    try {
-      const { connectToDatabase } = await import("../server/mongodb");
-      const mongoConnection = await connectToDatabase();
-
-      const MongoStore = (await import('connect-mongo')).default;
-      sessionStore = MongoStore.create({
-        client: mongoConnection.getClient() as any,
-        stringify: false,
+  if (!initPromise) {
+    initPromise = (async () => {
+      const STORAGE_TYPE = process.env.STORAGE_TYPE || 'mongodb';
+      if (STORAGE_TYPE === 'mongodb') {
+        try {
+          const { connectToDatabase } = await import("../server/mongodb");
+          await connectToDatabase();
+        } catch (error: any) {
+          console.warn('⚠️ Could not connect to MongoDB:', error.message);
+        }
+      }
+      await registerRoutes(app);
+      app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+        const status = err.status || err.statusCode || 500;
+        const message = err.message || "Internal Server Error";
+        res.status(status).json({ message });
       });
-    } catch (error: any) {
-      console.warn('⚠️ Could not set up MongoDB session store:', error.message);
-    }
+    })();
   }
-
-  const sessionConfig: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
-    resave: false,
-    saveUninitialized: false,
-    store: sessionStore,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
-      sameSite: 'lax',
-    },
-  };
-
-  app.use(session(sessionConfig));
-
-  await registerRoutes(app);
-
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-    res.status(status).json({ message });
-  });
-
-  isInitialized = true;
+  return initPromise;
 }
 
 export default async function handler(req: Request, res: Response) {
