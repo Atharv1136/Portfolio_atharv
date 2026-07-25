@@ -39,10 +39,21 @@ function getId(item: any): string {
   return item.id || item._id?.toString() || '';
 }
 
-// Configure multer for file uploads
-const uploadsDir = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+// Configure multer for file uploads (use /tmp/uploads on serverless read-only environments)
+let uploadsDir = path.join(process.cwd(), "uploads");
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (err) {
+  uploadsDir = path.join("/tmp", "uploads");
+  if (!fs.existsSync(uploadsDir)) {
+    try {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    } catch (e) {
+      console.warn("⚠️ Could not create uploads directory:", e);
+    }
+  }
 }
 
 const storageConfig = multer.diskStorage({
