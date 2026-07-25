@@ -15,6 +15,14 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Normalize URL for Express routing if Vercel stripped the /api prefix
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  if (!req.url.startsWith("/api") && req.url !== "/" && req.url !== "/sitemap.xml" && !req.url.startsWith("/uploads")) {
+    req.url = `/api${req.url}`;
+  }
+  next();
+});
+
 // Serve uploaded files if any exist in working dir
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
