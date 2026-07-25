@@ -68,8 +68,8 @@ let initPromise: Promise<void> | null = null;
 async function initServerless() {
   if (!initPromise) {
     initPromise = (async () => {
-      const STORAGE_TYPE = process.env.STORAGE_TYPE || 'mongodb';
-      if (STORAGE_TYPE === 'mongodb') {
+      const STORAGE_TYPE = process.env.STORAGE_TYPE || (process.env.MONGODB_URI ? 'mongodb' : 'simple');
+      if (STORAGE_TYPE === 'mongodb' && process.env.MONGODB_URI) {
         try {
           const { connectToDatabase } = await import("../server/mongodb");
           await connectToDatabase();

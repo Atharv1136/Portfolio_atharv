@@ -4,17 +4,10 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-const uri = process.env.MONGODB_URI;
-
-if (!uri) {
-  console.error("❌ MONGODB_URI not found in environment variables");
-  console.log("💡 Make sure your .env file contains: MONGODB_URI=your_connection_string");
-  throw new Error('MONGODB_URI environment variable is required');
-}
-
 let cachedConnection: mongoose.Connection | null = null;
 
 export async function connectToDatabase(): Promise<mongoose.Connection> {
+  const uri = process.env.MONGODB_URI;
   // If already connected, return existing connection
   if (mongoose.connection.readyState === 1) {
     console.log("✅ MongoDB already connected");
