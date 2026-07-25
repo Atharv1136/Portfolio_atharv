@@ -209,8 +209,16 @@ export function registerRoutes(app: Express): Server {
     res.json({ user: { id: req.userId, username: req.username } });
   });
 
+  // Helper to register both /api/path and /path
+  const registerGet = (pathStr: string, handler: any) => {
+    app.get(pathStr, handler);
+    if (pathStr.startsWith("/api/")) {
+      app.get(pathStr.replace("/api/", "/"), handler);
+    }
+  };
+
   // Public data routes (no auth required)
-  app.get("/api/about", async (req: Request, res: Response) => {
+  registerGet("/api/about", async (req: Request, res: Response) => {
     try {
       if (process.env.MONGODB_URI) await connectToDatabase();
       const storageInstance = getStorage();
@@ -228,7 +236,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/certifications", async (req: Request, res: Response) => {
+  registerGet("/api/certifications", async (req: Request, res: Response) => {
     try {
       if (process.env.MONGODB_URI) await connectToDatabase();
       const storageInstance = getStorage();
@@ -245,7 +253,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/hackathons", async (req: Request, res: Response) => {
+  registerGet("/api/hackathons", async (req: Request, res: Response) => {
     try {
       if (process.env.MONGODB_URI) await connectToDatabase();
       const storageInstance = getStorage();
@@ -262,7 +270,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/projects", async (req: Request, res: Response) => {
+  registerGet("/api/projects", async (req: Request, res: Response) => {
     try {
       if (process.env.MONGODB_URI) await connectToDatabase();
       const storageInstance = getStorage();
@@ -553,7 +561,7 @@ export function registerRoutes(app: Express): Server {
   // Blog Routes
 
   // Public: Get all published blogs
-  app.get("/api/blogs", async (req: Request, res: Response) => {
+  registerGet("/api/blogs", async (req: Request, res: Response) => {
     try {
       if (process.env.MONGODB_URI) await connectToDatabase();
       const storageInstance = getStorage();
@@ -710,7 +718,7 @@ export function registerRoutes(app: Express): Server {
   // ── Experience Routes ──────────────────────────────────────────────────────
 
   // Public: get all experiences
-  app.get("/api/experiences", async (req: Request, res: Response) => {
+  registerGet("/api/experiences", async (req: Request, res: Response) => {
     try {
       if (process.env.MONGODB_URI) await connectToDatabase();
       const storageInstance = getStorage();
@@ -784,7 +792,7 @@ export function registerRoutes(app: Express): Server {
   // ── Publication Routes ─────────────────────────────────────────────────────
 
   // Public: get all publications
-  app.get("/api/publications", async (req: Request, res: Response) => {
+  registerGet("/api/publications", async (req: Request, res: Response) => {
     try {
       if (process.env.MONGODB_URI) await connectToDatabase();
       const storageInstance = getStorage();

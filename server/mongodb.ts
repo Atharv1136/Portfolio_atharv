@@ -25,9 +25,8 @@ export async function connectToDatabase(): Promise<mongoose.Connection> {
     console.log("🔄 Connecting to MongoDB Atlas...");
 
     await mongoose.connect(uri, {
-      bufferCommands: false,
-      serverSelectionTimeoutMS: 10000,
-      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 15000,
     });
 
     cachedConnection = mongoose.connection;
