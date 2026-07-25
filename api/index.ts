@@ -3,7 +3,6 @@ import session from "express-session";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from "path";
-import MongoStore from "connect-mongo";
 import { connectToDatabase } from "../server/mongodb";
 import { registerRoutes } from "../server/routes";
 
@@ -42,26 +41,11 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
   next();
 });
 
-// Session configuration
-const STORAGE_TYPE = process.env.STORAGE_TYPE || (process.env.MONGODB_URI ? 'mongodb' : 'simple');
-let sessionStore: any = undefined;
-
-if (STORAGE_TYPE === 'mongodb' && process.env.MONGODB_URI) {
-  try {
-    sessionStore = MongoStore.create({
-      mongoUrl: process.env.MONGODB_URI,
-      stringify: false,
-    });
-  } catch (err: any) {
-    console.warn("⚠️ MongoStore setup warning:", err.message);
-  }
-}
-
+// Session configuration using standard memory store for serverless resilience
 const sessionConfig: session.SessionOptions = {
   secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
   resave: false,
   saveUninitialized: false,
-  store: sessionStore,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
@@ -80,33 +64,22 @@ app.get("/", (_req: Request, res: Response) => {
   });
 });
 
-let isInitialized = false;
-let initPromise: Promise<void> | null = null;
+// Register all Express API routes immediately
+registerRoutes(app);
 
-async function ensureInitialized() {
-  if (isInitialized) return;
-  if (!initPromise) {
-    initPromise = (async () => {
-      if (STORAGE_TYPE === 'mongodb' && process.env.MONGODB_URI) {
-        try {
-          await connectToDatabase();
-        } catch (error: any) {
-          console.warn('⚠️ Could not connect to MongoDB:', error.message);
-        }
-      }
-      await registerRoutes(app);
-      isInitialized = true;
-    })();
-  }
-  return initPromise;
+// Trigger MongoDB connection asynchronously in background
+const STORAGE_TYPE = process.env.STORAGE_TYPE || (process.env.MONGODB_URI ? 'mongodb' : 'simple');
+if (STORAGE_TYPE === 'mongodb' && process.env.MONGODB_URI) {
+  connectToDatabase().catch(err => {
+    console.warn('⚠️ Background MongoDB connection warning:', err.message);
+  });
 }
 
-export default async function handler(req: Request, res: Response) {
-  try {
-    await ensureInitialized();
-    app(req, res);
-  } catch (err: any) {
-    console.error("❌ Vercel function handler error:", err);
-    res.status(500).json({ message: err.message || "Internal Server Error" });
-  }
-}
+// Global error handler
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+  res.status(status).json({ message });
+});
+
+export default app;
