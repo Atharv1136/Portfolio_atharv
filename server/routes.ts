@@ -14,17 +14,15 @@ import { storage as mongodbStorage } from "./storage.mongodb";
 import { storage as simpleStorage } from "./storage.simple";
 import { connectToDatabase } from "./mongodb";
 
-// Resilient storage selector — falls back to simpleStorage if MongoDB connection fails
+// Resilient storage selector — connects to MongoDB Atlas and returns mongodbStorage
 async function getStorage(): Promise<any> {
-  const storageType = process.env.STORAGE_TYPE || (process.env.MONGODB_URI ? 'mongodb' : 'simple');
-  if (storageType === 'mongodb' && process.env.MONGODB_URI) {
+  if (process.env.MONGODB_URI || process.env.STORAGE_TYPE === 'mongodb') {
     try {
       await connectToDatabase();
-      return mongodbStorage;
     } catch (err: any) {
-      console.warn("⚠️ MongoDB connection unavailable, using fallback storage:", err.message);
-      return simpleStorage;
+      console.error("❌ MongoDB connection error in getStorage:", err.message);
     }
+    return mongodbStorage;
   }
   return simpleStorage;
 }
