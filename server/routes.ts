@@ -10,15 +10,13 @@ import { requireAuth, type AuthenticatedRequest } from "./auth";
 // Load environment variables (in case routes.ts is loaded before index.ts)
 dotenv.config();
 
-// Choose storage based on environment variable
-const STORAGE_TYPE = process.env.STORAGE_TYPE || 'simple';
+import { storage as mongodbStorage } from "./storage.mongodb";
+import { storage as simpleStorage } from "./storage.simple";
 
-// Lazy load storage — no caching to avoid stale module references after hot-reload
-async function getStorage(): Promise<any> {
-  const storageModule = STORAGE_TYPE === 'mongodb'
-    ? await import("./storage.mongodb")
-    : await import("./storage.simple");
-  return storageModule.storage as any;
+// Synchronous storage selector — statically bundled for Vercel serverless environment
+function getStorage(): any {
+  const storageType = process.env.STORAGE_TYPE || (process.env.MONGODB_URI ? 'mongodb' : 'simple');
+  return storageType === 'mongodb' ? mongodbStorage : simpleStorage;
 }
 
 // Helper function to normalize data from both storage types

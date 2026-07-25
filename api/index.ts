@@ -3,6 +3,8 @@ import session from "express-session";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from "path";
+import MongoStore from "connect-mongo";
+import { connectToDatabase } from "../server/mongodb";
 import { registerRoutes } from "../server/routes";
 
 dotenv.config();
@@ -41,10 +43,25 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 });
 
 // Session configuration
+const STORAGE_TYPE = process.env.STORAGE_TYPE || (process.env.MONGODB_URI ? 'mongodb' : 'simple');
+let sessionStore: any = undefined;
+
+if (STORAGE_TYPE === 'mongodb' && process.env.MONGODB_URI) {
+  try {
+    sessionStore = MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+      stringify: false,
+    });
+  } catch (err: any) {
+    console.warn("⚠️ MongoStore setup warning:", err.message);
+  }
+}
+
 const sessionConfig: session.SessionOptions = {
   secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
   resave: false,
   saveUninitialized: false,
+  store: sessionStore,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
@@ -68,10 +85,8 @@ let initPromise: Promise<void> | null = null;
 async function initServerless() {
   if (!initPromise) {
     initPromise = (async () => {
-      const STORAGE_TYPE = process.env.STORAGE_TYPE || (process.env.MONGODB_URI ? 'mongodb' : 'simple');
       if (STORAGE_TYPE === 'mongodb' && process.env.MONGODB_URI) {
         try {
-          const { connectToDatabase } = await import("../server/mongodb");
           await connectToDatabase();
         } catch (error: any) {
           console.warn('⚠️ Could not connect to MongoDB:', error.message);
