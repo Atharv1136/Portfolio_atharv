@@ -11,7 +11,8 @@ export default function Footer() {
             <a 
               href="https://github.com/Atharv1136" 
               target="_blank" 
-              rel="noopener noreferrer"
+              rel="noopener noreferrer me"
+              aria-label="Atharv Bhosale GitHub Profile"
               className="text-gray-400 hover:text-white transition-colors duration-300 hover:scale-110 transform"
             >
               <i className="fab fa-github text-2xl"></i>
@@ -19,7 +20,8 @@ export default function Footer() {
             <a 
               href="https://www.linkedin.com/in/atharvbhosale/" 
               target="_blank" 
-              rel="noopener noreferrer"
+              rel="noopener noreferrer me"
+              aria-label="Atharv Bhosale LinkedIn Profile"
               className="text-gray-400 hover:text-blue-400 transition-colors duration-300 hover:scale-110 transform"
             >
               <i className="fab fa-linkedin text-2xl"></i>
@@ -28,6 +30,7 @@ export default function Footer() {
               href="https://drive.google.com/drive/folders/1lNRsAFaP-cn7bKJlbEx8lRbZQSQaMmrC" 
               target="_blank" 
               rel="noopener noreferrer"
+              aria-label="Atharv Bhosale Resume Google Drive"
               className="text-gray-400 hover:text-red-400 transition-colors duration-300 hover:scale-110 transform"
             >
               <i className="fas fa-file-pdf text-2xl"></i>
@@ -35,7 +38,7 @@ export default function Footer() {
           </div>
           
           <p className="text-gray-500 text-sm">
-            © 2025 Atharv Ananda Bhosale. All rights reserved.
+            © 2026 Atharv Ananda Bhosale. All rights reserved.
           </p>
         </div>
       </div>
