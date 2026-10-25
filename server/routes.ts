@@ -89,7 +89,7 @@ export function registerRoutes(app: Express): Server {
       const storageInstance = await getStorage();
       const blogs = await storageInstance.getAllBlogs(true); // only published
 
-      const BASE_URL = 'https://atharvbhosale.site';
+      const BASE_URL = 'https://atharvbhosale.is-a.dev';
       const today = new Date().toISOString().split('T')[0];
 
       const staticPages = [

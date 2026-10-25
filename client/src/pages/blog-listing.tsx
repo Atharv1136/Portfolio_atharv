@@ -20,10 +20,10 @@ export default function BlogListing() {
             <Helmet>
                 <title>Blog | Atharv Bhosale — Software Developer</title>
                 <meta name="description" content="Read Atharv Bhosale's latest thoughts, tutorials, and insights on web development, AI, and technology." />
-                <link rel="canonical" href="https://atharvbhosale.site/blog" />
+                <link rel="canonical" href="https://atharvbhosale.is-a.dev/blog" />
                 <meta property="og:title" content="Blog | Atharv Bhosale" />
                 <meta property="og:description" content="Read Atharv Bhosale's latest thoughts, tutorials, and insights on web development, AI, and technology." />
-                <meta property="og:url" content="https://atharvbhosale.site/blog" />
+                <meta property="og:url" content="https://atharvbhosale.is-a.dev/blog" />
             </Helmet>
 
             <Navbar />

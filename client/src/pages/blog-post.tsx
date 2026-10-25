@@ -56,8 +56,8 @@ export default function BlogPost() {
                 <meta property="og:description" content={blog.seoDescription || blog.excerpt} />
                 <meta property="og:image" content={blog.coverImage} />
                 <meta property="og:type" content="article" />
-                <meta property="og:url" content={`https://atharvbhosale.site/blog/${blog.slug}`} />
-                <link rel="canonical" href={`https://atharvbhosale.site/blog/${blog.slug}`} />
+                <meta property="og:url" content={`https://atharvbhosale.is-a.dev/blog/${blog.slug}`} />
+                <link rel="canonical" href={`https://atharvbhosale.is-a.dev/blog/${blog.slug}`} />
             </Helmet>
 
             <Navbar />
