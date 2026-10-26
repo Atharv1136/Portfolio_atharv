@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import AdminLoginDialog from './admin-login-dialog';
@@ -9,8 +9,8 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
-  const [nameClickCount, setNameClickCount] = useState(0);
-  const [lastClickTime, setLastClickTime] = useState(0);
+  const clickCountRef = useRef(0);
+  const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check if user is authenticated
   const { data: user, refetch: refetchUser } = useQuery<{ user: { id: number; username: string } }>({
@@ -24,7 +24,12 @@ export default function Navbar() {
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current);
+      }
+    };
   }, []);
 
   const scrollToSection = (sectionId: string) => {
@@ -57,53 +62,33 @@ export default function Navbar() {
   };
 
   const handleNameClick = (e: React.MouseEvent) => {
-    // If user is already logged in, open admin dashboard
-    if (user) {
-      setShowAdminDashboard(true);
-      return;
-    }
-
     e.preventDefault();
-    const currentTime = Date.now();
-
-    // Check if more than 2 seconds have passed since last click (reset timer)
-    if (lastClickTime > 0 && currentTime - lastClickTime > 2000) {
-      // Reset counter and reload page on single click after timeout
-      setNameClickCount(0);
-      setLastClickTime(0);
-      window.location.reload();
-      return;
-    }
 
     // Increment click count
-    const newCount = (nameClickCount === 0 ? 1 : nameClickCount + 1);
-    setNameClickCount(newCount);
-    setLastClickTime(currentTime);
+    clickCountRef.current += 1;
 
-    console.log(`Click count: ${newCount}/5`); // Debug log - remove later if needed
+    // Clear any existing reset timer
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+    }
 
-    // If clicked 5 times, open admin login
-    if (newCount >= 5) {
+    // Require 3 clicks to activate hidden admin login
+    if (clickCountRef.current >= 3) {
+      clickCountRef.current = 0;
+      // Invalidate existing session so user is always prompted for ID and password
+      apiRequest('POST', '/api/auth/logout').catch(() => {});
+      refetchUser();
       setShowLoginDialog(true);
-      setNameClickCount(0);
-      setLastClickTime(0);
       return;
     }
 
-    // For single click, set a timeout to reload after 2 seconds if no more clicks
-    // Clear any existing timeout
-    if ((window as any).nameClickTimeout) {
-      clearTimeout((window as any).nameClickTimeout);
-    }
-
-    // Set new timeout to reload if no more clicks within 2 seconds
-    (window as any).nameClickTimeout = setTimeout(() => {
-      if (newCount === 1) {
-        window.location.reload();
+    // Wait 600ms for consecutive clicks; if none follow, treat as single click to navigate home
+    clickTimerRef.current = setTimeout(() => {
+      if (clickCountRef.current === 1) {
+        scrollToSection('home');
       }
-      setNameClickCount(0);
-      setLastClickTime(0);
-    }, 2000);
+      clickCountRef.current = 0;
+    }, 600);
   };
 
   const navItems = [
